@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎲 부루마블 게임</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       min-height: 100vh;
@@ -18,13 +14,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 40px;
+      padding: 20px 16px 40px;
       color: #5a4a6a;
     }
 
     h1 {
       font-size: 2rem;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: #ff7eb3;
       text-shadow: 2px 2px 0 #fff;
     }
@@ -32,10 +28,10 @@
     .subtitle {
       font-size: 0.95rem;
       color: #9b8ab0;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
-    /* ── Setup Modal ── */
+    /* ── Overlays ── */
     .overlay {
       position: fixed;
       inset: 0;
@@ -46,47 +42,80 @@
       justify-content: center;
       z-index: 100;
     }
+    .overlay.hidden { display: none; }
 
-    .overlay.hidden {
-      display: none;
-    }
-
-    .setup-card {
+    .modal-card {
       background: #fff;
       border-radius: 28px;
-      padding: 32px 36px;
+      padding: 28px 32px;
       box-shadow: 0 12px 40px rgba(255, 126, 179, 0.25);
-      max-width: 420px;
+      max-width: 400px;
       width: 92%;
       text-align: center;
     }
 
-    .setup-card h2 {
-      font-size: 1.5rem;
+    .modal-card h2 {
+      font-size: 1.4rem;
       color: #ff7eb3;
+      margin-bottom: 12px;
+    }
+
+    .modal-card p {
+      color: #7a6a8a;
+      line-height: 1.6;
       margin-bottom: 20px;
     }
 
-    .setup-section {
-      margin-bottom: 24px;
+    .modal-price {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #5a9fd4;
+      margin-bottom: 16px;
     }
 
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .modal-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .modal-btn:hover { transform: translateY(-2px); }
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #ff9ec5, #b8a0ff);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(255, 126, 179, 0.35);
+    }
+    .modal-btn.secondary {
+      background: #f0e8ff;
+      color: #9b7aaa;
+    }
+    .modal-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Setup ── */
+    .setup-section { margin-bottom: 24px; }
     .setup-section label {
       display: block;
       font-weight: 600;
       margin-bottom: 10px;
       color: #7a6a8a;
     }
-
-    .player-count-btns {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
+    .player-count-btns { display: flex; gap: 10px; justify-content: center; }
     .count-btn {
-      width: 52px;
-      height: 52px;
+      width: 52px; height: 52px;
       border: 3px solid #ffd6e8;
       border-radius: 50%;
       background: #fff5fa;
@@ -96,48 +125,19 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
-    .count-btn:hover {
-      background: #ffe0f0;
-      transform: scale(1.08);
-    }
-
+    .count-btn:hover { background: #ffe0f0; transform: scale(1.08); }
     .count-btn.selected {
       background: #ff9ec5;
       border-color: #ff7eb3;
       color: #fff;
       box-shadow: 0 4px 12px rgba(255, 126, 179, 0.4);
     }
-
-    .emoji-picker {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      margin-top: 8px;
-    }
-
-    .player-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .player-label {
-      font-weight: 600;
-      min-width: 70px;
-      text-align: right;
-      color: #9b7aaa;
-    }
-
-    .emoji-options {
-      display: flex;
-      gap: 8px;
-    }
-
+    .emoji-picker { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+    .player-row { display: flex; align-items: center; gap: 12px; justify-content: center; }
+    .player-label { font-weight: 600; min-width: 70px; text-align: right; color: #9b7aaa; }
+    .emoji-options { display: flex; gap: 8px; }
     .emoji-btn {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       border: 3px solid transparent;
       border-radius: 16px;
       background: #f5f0ff;
@@ -145,23 +145,13 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
-    .emoji-btn:hover:not(:disabled) {
-      transform: scale(1.12);
-      background: #ede5ff;
-    }
-
+    .emoji-btn:hover:not(:disabled) { transform: scale(1.12); background: #ede5ff; }
     .emoji-btn.selected {
       border-color: #b8a0ff;
       background: #ede5ff;
       box-shadow: 0 4px 10px rgba(184, 160, 255, 0.4);
     }
-
-    .emoji-btn:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
+    .emoji-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .start-btn {
       margin-top: 8px;
       padding: 14px 40px;
@@ -173,44 +163,94 @@
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(255, 126, 179, 0.35);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s;
     }
-
-    .start-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 126, 179, 0.45);
-    }
-
-    .start-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .setup-error {
-      color: #ff6b8a;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      min-height: 1.2em;
-    }
+    .start-btn:hover { transform: translateY(-2px); }
+    .setup-error { color: #ff6b8a; font-size: 0.85rem; margin-top: 10px; min-height: 1.2em; }
 
     /* ── Game Layout ── */
     .game-area {
       display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .game-area.hidden { display: none; }
+
+    .board-column {
+      display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
-      width: 100%;
-      max-width: 560px;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
     }
 
-    .game-area.hidden {
-      display: none;
+  /* ── Balance Panel ── */
+    .balance-panel {
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 8px 28px rgba(184, 160, 255, 0.2);
+      width: 220px;
+      flex-shrink: 0;
+    }
+
+    .balance-panel h3 {
+      font-size: 1rem;
+      color: #ff7eb3;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .balance-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      margin-bottom: 8px;
+      border: 3px solid transparent;
+      transition: all 0.25s;
+    }
+
+    .balance-item.active {
+      border-color: #ff9ec5;
+      box-shadow: 0 4px 12px rgba(255, 126, 179, 0.25);
+    }
+
+    .balance-item.bankrupt {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+
+    .balance-emoji { font-size: 1.6rem; }
+
+    .balance-info { flex: 1; min-width: 0; }
+    .balance-name { font-size: 0.8rem; color: #9b7aaa; font-weight: 600; }
+    .balance-money {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #5a4a6a;
+    }
+
+    .balance-money.low { color: #ff6b8a; }
+
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.8);
     }
 
     /* ── Board ── */
     .board-wrapper {
       position: relative;
-      width: min(92vw, 480px);
+      width: min(88vw, 480px);
       aspect-ratio: 1;
     }
 
@@ -230,48 +270,68 @@
     .cell {
       border-radius: 12px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
       font-size: 0.65rem;
       font-weight: 700;
       color: rgba(90, 74, 106, 0.5);
-      transition: transform 0.15s;
+      overflow: hidden;
+      transition: background 0.3s;
     }
 
-    .cell.path {
-      border: 2px solid rgba(255, 255, 255, 0.7);
-    }
+    .cell.path { border: 2px solid rgba(255, 255, 255, 0.7); }
 
     .cell.center {
       background: linear-gradient(135deg, #fff9f0, #f0f8ff) !important;
       border: 2px dashed #e8d8f0;
       border-radius: 16px;
-      font-size: 2.5rem;
-      color: #d4c0e8;
     }
+    .cell.center::after { content: "🎲"; font-size: 2.5rem; opacity: 0.5; }
 
-  .cell.center::after {
-      content: "🎲";
-      opacity: 0.5;
-    }
-
-    /* Pastel path colors assigned via data-path-index */
-    .cell.path[data-path-index="0"],  .cell.path[data-path-index="8"],  .cell.path[data-path-index="16"] { background: #ffd6e8; }
-    .cell.path[data-path-index="1"],  .cell.path[data-path-index="9"],  .cell.path[data-path-index="17"] { background: #ffe8d6; }
-    .cell.path[data-path-index="2"],  .cell.path[data-path-index="10"], .cell.path[data-path-index="18"] { background: #fff5c2; }
-    .cell.path[data-path-index="3"],  .cell.path[data-path-index="11"], .cell.path[data-path-index="19"] { background: #d6fff0; }
-    .cell.path[data-path-index="4"],  .cell.path[data-path-index="12"], .cell.path[data-path-index="20"] { background: #f0d6ff; }
-    .cell.path[data-path-index="5"],  .cell.path[data-path-index="13"], .cell.path[data-path-index="21"] { background: #d6f5ff; }
-    .cell.path[data-path-index="6"],  .cell.path[data-path-index="14"], .cell.path[data-path-index="22"] { background: #e0ffd6; }
-    .cell.path[data-path-index="7"],  .cell.path[data-path-index="15"], .cell.path[data-path-index="23"] { background: #ffe0f5; }
+    .cell.path[data-path-index="0"]  { background: #fff0f5; }
+    .cell.path[data-path-index="1"],  .cell.path[data-path-index="9"],  .cell.path[data-path-index="17"] { background: #ffd6e8; }
+    .cell.path[data-path-index="2"],  .cell.path[data-path-index="10"], .cell.path[data-path-index="18"] { background: #ffe8d6; }
+    .cell.path[data-path-index="3"],  .cell.path[data-path-index="11"], .cell.path[data-path-index="19"] { background: #fff5c2; }
+    .cell.path[data-path-index="4"],  .cell.path[data-path-index="12"], .cell.path[data-path-index="20"] { background: #d6fff0; }
+    .cell.path[data-path-index="5"],  .cell.path[data-path-index="13"], .cell.path[data-path-index="21"] { background: #f0d6ff; }
+    .cell.path[data-path-index="6"],  .cell.path[data-path-index="14"], .cell.path[data-path-index="22"] { background: #d6f5ff; }
+    .cell.path[data-path-index="7"],  .cell.path[data-path-index="15"], .cell.path[data-path-index="23"] { background: #e0ffd6; }
+    .cell.path[data-path-index="8"],  .cell.path[data-path-index="16"] { background: #ffe0f5; }
 
     .cell-number {
       position: absolute;
-      top: 3px;
-      left: 5px;
-      font-size: 0.55rem;
-      opacity: 0.6;
+      top: 2px;
+      left: 4px;
+      font-size: 0.5rem;
+      opacity: 0.55;
+    }
+
+    .cell-name {
+      font-size: 0.45rem;
+      text-align: center;
+      line-height: 1.2;
+      padding: 0 2px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cell-buildings {
+      font-size: clamp(0.45rem, 1.8vw, 0.7rem);
+      line-height: 1;
+      margin-top: 1px;
+      letter-spacing: -1px;
+    }
+
+    .cell-price {
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      font-size: 0.42rem;
+      opacity: 0.65;
     }
 
     .token {
@@ -280,17 +340,12 @@
       position: absolute;
       z-index: 2;
       filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
-      transition: transform 0.2s;
       pointer-events: none;
     }
-
-    .token.bounce {
-      animation: bounce 0.35s ease;
-    }
-
+    .token.bounce { animation: bounce 0.35s ease; }
     @keyframes bounce {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50%       { transform: translateY(-8px) scale(1.15); }
+      0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+      50%       { transform: translate(-50%, -50%) translateY(-8px) scale(1.15); }
     }
 
     .tokens-container {
@@ -304,14 +359,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       width: 100%;
     }
 
     .player-status {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
     }
 
@@ -319,50 +374,38 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 16px;
+      padding: 6px 14px;
       border-radius: 50px;
       background: #fff;
       border: 3px solid #f0e8ff;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       transition: all 0.25s;
     }
-
     .player-badge.active {
       border-color: #ff9ec5;
       background: #fff5fa;
       box-shadow: 0 4px 14px rgba(255, 126, 179, 0.3);
       transform: scale(1.05);
     }
+    .player-badge.bankrupt { opacity: 0.4; }
+    .player-badge .emoji { font-size: 1.3rem; }
 
-    .player-badge .emoji {
-      font-size: 1.4rem;
-    }
-
-    .dice-area {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
+    .dice-area { display: flex; align-items: center; gap: 16px; }
 
     .dice-display {
-      width: 64px;
-      height: 64px;
+      width: 60px; height: 60px;
       background: #fff;
       border-radius: 18px;
       border: 3px solid #ffd6e8;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 800;
       color: #ff7eb3;
       box-shadow: 0 4px 12px rgba(255, 126, 179, 0.2);
     }
-
-    .dice-display.rolling {
-      animation: shake 0.4s ease infinite;
-    }
-
+    .dice-display.rolling { animation: shake 0.4s ease infinite; }
     @keyframes shake {
       0%, 100% { transform: rotate(0deg); }
       25%       { transform: rotate(-8deg); }
@@ -370,34 +413,57 @@
     }
 
     .roll-btn {
-      padding: 14px 32px;
+      padding: 14px 28px;
       border: none;
       border-radius: 50px;
       background: linear-gradient(135deg, #a8e6cf, #88d8f0);
       color: #3a6a5a;
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 6px 18px rgba(136, 216, 240, 0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s;
     }
-
-    .roll-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 22px rgba(136, 216, 240, 0.5);
-    }
-
-    .roll-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    .roll-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .roll-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .turn-message {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #9b7aaa;
       min-height: 1.4em;
       text-align: center;
+      padding: 0 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border-radius: 50px;
+      padding: 12px 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      font-weight: 600;
+      color: #7a6a8a;
+      z-index: 50;
+      animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    @media (max-width: 700px) {
+      .game-area { flex-direction: column; align-items: center; }
+      .balance-panel { width: 100%; max-width: 480px; }
+      .balance-panel .balance-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .balance-item { margin-bottom: 0; }
     }
   </style>
 </head>
@@ -407,9 +473,8 @@
 
   <!-- Setup -->
   <div class="overlay" id="setupOverlay">
-    <div class="setup-card">
+    <div class="modal-card">
       <h2>게임 준비 🌈</h2>
-
       <div class="setup-section">
         <label>몇 명이서 할까요?</label>
         <div class="player-count-btns" id="countBtns">
@@ -418,40 +483,91 @@
           <button class="count-btn selected" data-count="4">4</button>
         </div>
       </div>
-
       <div class="setup-section">
         <label>동물 친구를 골라주세요!</label>
         <div class="emoji-picker" id="emojiPicker"></div>
       </div>
-
       <button class="start-btn" id="startBtn">게임 시작! 🚀</button>
       <p class="setup-error" id="setupError"></p>
     </div>
   </div>
 
+  <!-- Action Modal -->
+  <div class="overlay hidden" id="actionOverlay">
+    <div class="modal-card">
+      <h2 id="actionTitle">땅 사기</h2>
+      <p id="actionDesc"></p>
+      <div class="modal-price" id="actionPrice"></div>
+      <div class="modal-btns" id="actionBtns"></div>
+    </div>
+  </div>
+
+  <!-- Bankruptcy Modal -->
+  <div class="overlay hidden" id="bankruptOverlay">
+    <div class="modal-card">
+      <h2>😢 파산!</h2>
+      <p id="bankruptMsg"></p>
+      <button class="modal-btn primary" id="bankruptOk">확인</button>
+    </div>
+  </div>
+
   <!-- Game -->
   <div class="game-area hidden" id="gameArea">
-    <div class="board-wrapper">
-      <div class="board" id="board"></div>
-      <div class="tokens-container" id="tokensContainer"></div>
-    </div>
+    <aside class="balance-panel">
+      <h3>💰 잔액 현황</h3>
+      <div class="balance-list" id="balanceList"></div>
+    </aside>
 
-    <div class="controls">
-      <div class="player-status" id="playerStatus"></div>
-      <p class="turn-message" id="turnMessage"></p>
-      <div class="dice-area">
-        <div class="dice-display" id="diceDisplay">?</div>
-        <button class="roll-btn" id="rollBtn">🎲 주사위 굴리기</button>
+    <div class="board-column">
+      <div class="board-wrapper">
+        <div class="board" id="board"></div>
+        <div class="tokens-container" id="tokensContainer"></div>
+      </div>
+      <div class="controls">
+        <div class="player-status" id="playerStatus"></div>
+        <p class="turn-message" id="turnMessage"></p>
+        <div class="dice-area">
+          <div class="dice-display" id="diceDisplay">?</div>
+          <button class="roll-btn" id="rollBtn">🎲 주사위 굴리기</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const EMOJIS = ["🐶", "🐱", "🦊", "🐰"];
+    const PLAYER_COLORS = [
+      { bg: "#ffb3c6", dark: "#ff7eb3" },
+      { bg: "#a8d4ff", dark: "#5a9fd4" },
+      { bg: "#b3f0b3", dark: "#5cb85c" },
+      { bg: "#ffd9a8", dark: "#e8a040" },
+    ];
     const GRID_SIZE = 7;
     const TOTAL_PATH = 24;
+    const START_CELL = 0;
+    const START_MONEY = 2000000;
+    const SALARY = 200000;
+    const MAX_BUILDING_LEVEL = 7;
 
-    // Clockwise path: grid cell indices (row*7 + col), starting at top-left corner = 0
+    const CELL_NAMES = [
+      "출발", "사탕마을", "무지개언덕", "별빛공원", "구름다리", "풍선거리", "꿈나라",
+      "햇살광장", "달빛호수", "무지개다리", "꽃밭길", "나비정원", "토끼마을",
+      "펭귄항구", "고래바다", "산타마을", "요정숲", "드래곤산", "유니콘들판",
+      "마법성", "행복마을", "친구광장", "웃음거리", "사랑언덕"
+    ];
+
+    const LAND_PRICES = CELL_NAMES.map((_, i) =>
+      i === 0 ? 0 : 60000 + Math.floor(i * 8000)
+    );
+
+    const UPGRADE_COSTS = [0, 50000, 70000, 100000, 150000, 220000, 320000, 500000];
+    const TOLLS = [15000, 35000, 55000, 80000, 120000, 170000, 240000, 400000];
+
+    const BUILDING_LABELS = [
+      "", "주택 1개", "주택 2개", "주택 3개",
+      "빌딩 1개", "빌딩 2개", "빌딩 3개", "랜드마크"
+    ];
+
     const PATH_GRID_INDICES = [
       0, 1, 2, 3, 4, 5, 6,
       13, 20, 27, 34, 41,
@@ -459,13 +575,10 @@
       35, 28, 21, 14, 7
     ];
 
-    // Center cells occupy grid positions 8-12, 15-19, 22-26, 29-33, 36-40
     const CENTER_INDICES = new Set();
-    for (let r = 1; r <= 5; r++) {
-      for (let c = 1; c <= 5; c++) {
+    for (let r = 1; r <= 5; r++)
+      for (let c = 1; c <= 5; c++)
         CENTER_INDICES.add(r * GRID_SIZE + c);
-      }
-    }
 
     const pathIndexByGrid = {};
     PATH_GRID_INDICES.forEach((gi, pi) => { pathIndexByGrid[gi] = pi; });
@@ -473,18 +586,68 @@
     let playerCount = 4;
     let selectedEmojis = ["🐶", "🐱", "🦊", "🐰"];
     let players = [];
+    let properties = [];
     let currentPlayer = 0;
     let isMoving = false;
     let cellElements = {};
-    let boardRect = null;
+
+    const setupOverlay = document.getElementById("setupOverlay");
+    const gameArea = document.getElementById("gameArea");
+    const actionOverlay = document.getElementById("actionOverlay");
+    const bankruptOverlay = document.getElementById("bankruptOverlay");
+    const rollBtn = document.getElementById("rollBtn");
+    const diceDisplay = document.getElementById("diceDisplay");
+
+    // ── Utilities ──
+    function formatMoney(n) {
+      if (n < 0) return `-${formatMoney(-n)}`;
+      return n.toLocaleString("ko-KR") + "원";
+    }
+
+    function sleep(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    function getBuildingEmoji(level) {
+      if (level <= 0) return "";
+      if (level <= 3) return "🏡".repeat(level);
+      if (level <= 6) return "🏢".repeat(level - 3);
+      return "🏰";
+    }
+
+    function getNextUpgradeLabel(level) {
+      if (level >= MAX_BUILDING_LEVEL) return null;
+      return BUILDING_LABELS[level + 1];
+    }
+
+    function showToast(msg) {
+      const old = document.querySelector(".toast");
+      if (old) old.remove();
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2500);
+    }
+
+    function activePlayers() {
+      return players.map((p, i) => ({ p, i })).filter(({ p }) => !p.bankrupt);
+    }
+
+    function nextActivePlayer(from) {
+      const n = players.length;
+      for (let i = 1; i <= n; i++) {
+        const idx = (from + i) % n;
+        if (!players[idx].bankrupt) return idx;
+      }
+      return from;
+    }
 
     // ── Setup ──
     const countBtns = document.getElementById("countBtns");
     const emojiPicker = document.getElementById("emojiPicker");
     const startBtn = document.getElementById("startBtn");
     const setupError = document.getElementById("setupError");
-    const setupOverlay = document.getElementById("setupOverlay");
-    const gameArea = document.getElementById("gameArea");
 
     countBtns.addEventListener("click", (e) => {
       const btn = e.target.closest(".count-btn");
@@ -500,14 +663,11 @@
       for (let i = 0; i < playerCount; i++) {
         const row = document.createElement("div");
         row.className = "player-row";
-
         const label = document.createElement("span");
         label.className = "player-label";
         label.textContent = `${i + 1}번 친구`;
-
         const options = document.createElement("div");
         options.className = "emoji-options";
-
         EMOJIS.forEach((emoji) => {
           const btn = document.createElement("button");
           btn.className = "emoji-btn";
@@ -515,10 +675,9 @@
           btn.dataset.player = i;
           btn.dataset.emoji = emoji;
           if (selectedEmojis[i] === emoji) btn.classList.add("selected");
-          btn.addEventListener("click", () => selectEmoji(i, emoji));
+          btn.addEventListener("click", () => { selectedEmojis[i] = emoji; renderEmojiPicker(); });
           options.appendChild(btn);
         });
-
         row.appendChild(label);
         row.appendChild(options);
         emojiPicker.appendChild(row);
@@ -526,16 +685,8 @@
       updateEmojiAvailability();
     }
 
-    function selectEmoji(playerIdx, emoji) {
-      selectedEmojis[playerIdx] = emoji;
-      renderEmojiPicker();
-    }
-
     function updateEmojiAvailability() {
-      const used = new Set();
-      for (let i = 0; i < playerCount; i++) {
-        if (selectedEmojis[i]) used.add(selectedEmojis[i]);
-      }
+      const used = new Set(selectedEmojis.slice(0, playerCount));
       emojiPicker.querySelectorAll(".emoji-btn").forEach((btn) => {
         const pIdx = parseInt(btn.dataset.player, 10);
         const emoji = btn.dataset.emoji;
@@ -544,10 +695,9 @@
         btn.disabled = isUsedByOther;
         btn.classList.toggle("selected", isSelected);
       });
-
-      const unique = new Set(selectedEmojis.slice(0, playerCount));
       setupError.textContent =
-        unique.size < playerCount ? "같은 동물은 두 명이 못 써요! 다른 친구를 골라주세요 🙏" : "";
+        new Set(selectedEmojis.slice(0, playerCount)).size < playerCount
+          ? "같은 동물은 두 명이 못 써요! 다른 친구를 골라주세요 🙏" : "";
     }
 
     startBtn.addEventListener("click", () => {
@@ -563,9 +713,7 @@
 
     // ── Board ──
     function gridToPlacement(index) {
-      const row = Math.floor(index / GRID_SIZE) + 1;
-      const col = (index % GRID_SIZE) + 1;
-      return { row, col };
+      return { row: Math.floor(index / GRID_SIZE) + 1, col: (index % GRID_SIZE) + 1 };
     }
 
     function buildBoard() {
@@ -581,7 +729,6 @@
 
       for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         if (CENTER_INDICES.has(i)) continue;
-
         const cell = document.createElement("div");
         cell.className = "cell path";
         cell.dataset.gridIndex = i;
@@ -596,21 +743,60 @@
           num.className = "cell-number";
           num.textContent = pathIdx;
           cell.appendChild(num);
-        }
 
+          const name = document.createElement("span");
+          name.className = "cell-name";
+          name.textContent = CELL_NAMES[pathIdx];
+          cell.appendChild(name);
+
+          const buildings = document.createElement("span");
+          buildings.className = "cell-buildings";
+          buildings.id = `buildings-${pathIdx}`;
+          cell.appendChild(buildings);
+
+          if (pathIdx !== START_CELL) {
+            const price = document.createElement("span");
+            price.className = "cell-price";
+            price.textContent = formatMoney(LAND_PRICES[pathIdx]);
+            cell.appendChild(price);
+          }
+        }
         board.appendChild(cell);
         cellElements[i] = cell;
       }
+      updateAllCells();
+    }
+
+    function updateCell(pathIdx) {
+      const gi = PATH_GRID_INDICES[pathIdx];
+      const cell = cellElements[gi];
+      if (!cell) return;
+
+      const prop = properties[pathIdx];
+      const bldg = document.getElementById(`buildings-${pathIdx}`);
+      if (bldg) bldg.textContent = getBuildingEmoji(prop.buildingLevel);
+
+      if (prop.owner !== null) {
+        const color = PLAYER_COLORS[prop.owner];
+        cell.style.background = color.bg;
+        cell.style.borderColor = color.dark;
+      } else if (pathIdx !== START_CELL) {
+        cell.style.background = "";
+        cell.style.borderColor = "";
+      }
+    }
+
+    function updateAllCells() {
+      for (let i = 0; i < TOTAL_PATH; i++) updateCell(i);
     }
 
     function getCellCenter(gridIndex) {
       const cell = cellElements[gridIndex];
-      const board = document.getElementById("board");
       const cellRect = cell.getBoundingClientRect();
       const wrapperRect = document.querySelector(".board-wrapper").getBoundingClientRect();
       return {
         x: cellRect.left - wrapperRect.left + cellRect.width / 2,
-        y: cellRect.top - wrapperRect.top + cellRect.height / 2
+        y: cellRect.top - wrapperRect.top + cellRect.height / 2,
       };
     }
 
@@ -626,26 +812,46 @@
     function renderTokens(animate = false) {
       const container = document.getElementById("tokensContainer");
       container.innerHTML = "";
-
-      // Group players by position for stacking
       const byPos = {};
       players.forEach((p, idx) => {
+        if (p.bankrupt) return;
         const gi = PATH_GRID_INDICES[p.position];
         if (!byPos[gi]) byPos[gi] = [];
         byPos[gi].push(idx);
       });
-
       players.forEach((p, idx) => {
+        if (p.bankrupt) return;
         const gi = PATH_GRID_INDICES[p.position];
         const stackIdx = byPos[gi].indexOf(idx);
-
         const token = document.createElement("div");
         token.className = "token";
-        token.id = `token-${idx}`;
         token.textContent = p.emoji;
         if (animate && idx === currentPlayer) token.classList.add("bounce");
         container.appendChild(token);
         positionToken(token, gi, stackIdx);
+      });
+    }
+
+    function renderBalancePanel() {
+      const list = document.getElementById("balanceList");
+      list.innerHTML = "";
+      players.forEach((p, idx) => {
+        const item = document.createElement("div");
+        item.className = "balance-item"
+          + (idx === currentPlayer ? " active" : "")
+          + (p.bankrupt ? " bankrupt" : "");
+        const dot = document.createElement("div");
+        dot.className = "color-dot";
+        dot.style.background = PLAYER_COLORS[idx].dark;
+        item.innerHTML = `
+          <span class="balance-emoji">${p.emoji}</span>
+          <div class="balance-info">
+            <div class="balance-name">${idx + 1}번 친구${p.bankrupt ? " (파산)" : ""}</div>
+            <div class="balance-money${p.money <= 100000 && !p.bankrupt ? " low" : ""}">${formatMoney(p.money)}</div>
+          </div>
+        `;
+        item.insertBefore(dot, item.firstChild);
+        list.appendChild(item);
       });
     }
 
@@ -654,7 +860,9 @@
       status.innerHTML = "";
       players.forEach((p, idx) => {
         const badge = document.createElement("div");
-        badge.className = "player-badge" + (idx === currentPlayer ? " active" : "");
+        badge.className = "player-badge"
+          + (idx === currentPlayer ? " active" : "")
+          + (p.bankrupt ? " bankrupt" : "");
         badge.innerHTML = `<span class="emoji">${p.emoji}</span><span>${idx + 1}번</span>`;
         status.appendChild(badge);
       });
@@ -666,69 +874,218 @@
       msg.textContent = extra || `${p.emoji} ${currentPlayer + 1}번 친구 차례예요!`;
     }
 
+    function refreshUI() {
+      renderBalancePanel();
+      renderPlayerStatus();
+      updateAllCells();
+      renderTokens();
+    }
+
+    // ── Money ──
+    function addMoney(playerIdx, amount, reason) {
+      players[playerIdx].money += amount;
+      if (reason) showToast(`${players[playerIdx].emoji} ${reason} +${formatMoney(amount)}`);
+      renderBalancePanel();
+    }
+
+    function spendMoney(playerIdx, amount) {
+      players[playerIdx].money -= amount;
+      renderBalancePanel();
+    }
+
+    async function checkBankruptcy(playerIdx) {
+      if (players[playerIdx].money > 0 || players[playerIdx].bankrupt) return false;
+      players[playerIdx].bankrupt = true;
+      await showBankruptModal(playerIdx);
+      refreshUI();
+      return true;
+    }
+
+    function showBankruptModal(playerIdx) {
+      return new Promise((resolve) => {
+        const p = players[playerIdx];
+        document.getElementById("bankruptMsg").textContent =
+          `${p.emoji} ${playerIdx + 1}번 친구가 돈이 다 떨어져서 파산했어요! 😢`;
+        bankruptOverlay.classList.remove("hidden");
+        document.getElementById("bankruptOk").onclick = () => {
+          bankruptOverlay.classList.add("hidden");
+          resolve();
+        };
+      });
+    }
+
+    // ── Action Modal ──
+    function showActionModal({ title, desc, price, buttons }) {
+      return new Promise((resolve) => {
+        document.getElementById("actionTitle").textContent = title;
+        document.getElementById("actionDesc").textContent = desc;
+        document.getElementById("actionPrice").textContent = price ? formatMoney(price) : "";
+        const btns = document.getElementById("actionBtns");
+        btns.innerHTML = "";
+        buttons.forEach(({ label, primary, disabled, value }) => {
+          const btn = document.createElement("button");
+          btn.className = "modal-btn " + (primary ? "primary" : "secondary");
+          btn.textContent = label;
+          btn.disabled = !!disabled;
+          btn.onclick = () => {
+            actionOverlay.classList.add("hidden");
+            resolve(value);
+          };
+          btns.appendChild(btn);
+        });
+        actionOverlay.classList.remove("hidden");
+      });
+    }
+
+    // ── Landing logic ──
+    async function handleLanding(playerIdx) {
+      const pathIdx = players[playerIdx].position;
+      const prop = properties[pathIdx];
+      const p = players[playerIdx];
+
+      if (pathIdx === START_CELL) {
+        updateTurnMessage(`${p.emoji} 출발지에 도착! 월급은 이미 받았어요 💵`);
+        return;
+      }
+
+      if (prop.owner === null) {
+        const price = LAND_PRICES[pathIdx];
+        const canBuy = p.money >= price;
+        const choice = await showActionModal({
+          title: "🏞️ 빈 땅 발견!",
+          desc: `"${CELL_NAMES[pathIdx]}" 땅을 살까요?`,
+          price,
+          buttons: [
+            { label: canBuy ? "사기! 🛒" : "돈이 부족해요", primary: true, disabled: !canBuy, value: "buy" },
+            { label: "패스", primary: false, value: "pass" },
+          ],
+        });
+        if (choice === "buy") {
+          spendMoney(playerIdx, price);
+          prop.owner = playerIdx;
+          showToast(`${p.emoji} "${CELL_NAMES[pathIdx]}" 구매 완료!`);
+          updateCell(pathIdx);
+          if (await checkBankruptcy(playerIdx)) return;
+        }
+        return;
+      }
+
+      if (prop.owner === playerIdx) {
+        if (prop.buildingLevel >= MAX_BUILDING_LEVEL) {
+          updateTurnMessage(`${p.emoji} 랜드마크는 더 이상 업그레이드할 수 없어요! 🏰`);
+          return;
+        }
+        const nextLevel = prop.buildingLevel + 1;
+        const cost = UPGRADE_COSTS[nextLevel];
+        const nextLabel = BUILDING_LABELS[nextLevel];
+        const canBuy = p.money >= cost;
+        const choice = await showActionModal({
+          title: "🏗️ 건물 업그레이드",
+          desc: `"${CELL_NAMES[pathIdx]}"에 ${nextLabel}(으)로 업그레이드할까요?`,
+          price: cost,
+          buttons: [
+            { label: canBuy ? "업그레이드! ⬆️" : "돈이 부족해요", primary: true, disabled: !canBuy, value: "upgrade" },
+            { label: "패스", primary: false, value: "pass" },
+          ],
+        });
+        if (choice === "upgrade") {
+          spendMoney(playerIdx, cost);
+          prop.buildingLevel = nextLevel;
+          showToast(`${p.emoji} ${nextLabel} 완성! ${getBuildingEmoji(nextLevel)}`);
+          updateCell(pathIdx);
+          if (await checkBankruptcy(playerIdx)) return;
+        }
+        return;
+      }
+
+      // Opponent's land – pay toll
+      const owner = prop.owner;
+      const toll = TOLLS[prop.buildingLevel];
+      const ownerP = players[owner];
+      const bldgText = prop.buildingLevel > 0
+        ? ` (${BUILDING_LABELS[prop.buildingLevel]} ${getBuildingEmoji(prop.buildingLevel)})`
+        : "";
+      spendMoney(playerIdx, toll);
+      addMoney(owner, toll, null);
+      showToast(`${p.emoji} → ${ownerP.emoji}에게 통행료 ${formatMoney(toll)}${bldgText}`);
+      updateTurnMessage(`${p.emoji}이(가) ${ownerP.emoji} 땅에 걸려 통행료를 냈어요!`);
+      if (await checkBankruptcy(playerIdx)) return;
+    }
+
     // ── Game flow ──
     function startGame(emojis) {
-      players = emojis.map((emoji) => ({ emoji, position: 0 }));
+      players = emojis.map((emoji, i) => ({
+        emoji,
+        position: 0,
+        money: START_MONEY,
+        bankrupt: false,
+        colorIdx: i,
+      }));
+      properties = Array.from({ length: TOTAL_PATH }, () => ({
+        owner: null,
+        buildingLevel: 0,
+      }));
       currentPlayer = 0;
       isMoving = false;
 
       setupOverlay.classList.add("hidden");
       gameArea.classList.remove("hidden");
-
       buildBoard();
-      // Wait for layout
-      requestAnimationFrame(() => {
-        renderTokens();
-        renderPlayerStatus();
-        updateTurnMessage();
-      });
+      requestAnimationFrame(() => refreshUI());
+      updateTurnMessage();
     }
 
-  window.addEventListener("resize", () => {
+    window.addEventListener("resize", () => {
       if (!gameArea.classList.contains("hidden")) renderTokens();
     });
 
-    const rollBtn = document.getElementById("rollBtn");
-    const diceDisplay = document.getElementById("diceDisplay");
-
     rollBtn.addEventListener("click", async () => {
       if (isMoving) return;
+      const p = players[currentPlayer];
+      if (p.bankrupt) return;
+
       isMoving = true;
       rollBtn.disabled = true;
 
       diceDisplay.classList.add("rolling");
       diceDisplay.textContent = "🎲";
-
-      // Brief rolling animation
       await sleep(500);
 
       const roll = Math.floor(Math.random() * 6) + 1;
       diceDisplay.classList.remove("rolling");
       diceDisplay.textContent = roll;
 
-      updateTurnMessage(`${players[currentPlayer].emoji}이(가) ${roll}칸 이동해요!`);
-
+      updateTurnMessage(`${p.emoji}이(가) ${roll}칸 이동해요!`);
       await movePlayer(currentPlayer, roll);
 
-      currentPlayer = (currentPlayer + 1) % players.length;
-      renderPlayerStatus();
-      updateTurnMessage();
-      renderTokens();
+      if (!p.bankrupt) await handleLanding(currentPlayer);
+
+      if (activePlayers().length <= 1) {
+        const winner = activePlayers()[0];
+        if (winner) {
+          updateTurnMessage(`🎉 ${winner.p.emoji} ${winner.i + 1}번 친구 승리!`);
+          rollBtn.disabled = true;
+        }
+      } else {
+        currentPlayer = nextActivePlayer(currentPlayer);
+        renderPlayerStatus();
+        renderBalancePanel();
+        updateTurnMessage();
+      }
 
       isMoving = false;
-      rollBtn.disabled = false;
+      if (activePlayers().length > 1) rollBtn.disabled = false;
     });
 
     async function movePlayer(playerIdx, steps) {
       for (let s = 0; s < steps; s++) {
         players[playerIdx].position = (players[playerIdx].position + 1) % TOTAL_PATH;
+        if (players[playerIdx].position === START_CELL) {
+          addMoney(playerIdx, SALARY, "출발지 월급");
+        }
         renderTokens(true);
         await sleep(350);
       }
-    }
-
-    function sleep(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
     }
   </script>
 </body>
