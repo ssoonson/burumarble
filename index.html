@@ -272,13 +272,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       position: relative;
       font-size: 0.65rem;
       font-weight: 700;
-      color: rgba(90, 74, 106, 0.5);
-      overflow: hidden;
+      color: rgba(90, 74, 106, 0.65);
+      overflow: visible;
       transition: background 0.3s;
+      padding: 10px 2px 14px;
     }
 
     .cell.path { border: 2px solid rgba(255, 255, 255, 0.7); }
@@ -309,29 +310,72 @@
     }
 
     .cell-name {
-      font-size: 0.45rem;
+      font-size: 0.42rem;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.15;
       padding: 0 2px;
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      margin-top: 2px;
     }
 
     .cell-buildings {
-      font-size: clamp(0.45rem, 1.8vw, 0.7rem);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 1px;
+      min-height: 1.1em;
+      margin-top: 2px;
       line-height: 1;
-      margin-top: 1px;
-      letter-spacing: -1px;
     }
 
-    .cell-price {
+    .cell-buildings .bldg-icon {
+      font-size: clamp(0.7rem, 3.2vw, 1.05rem);
+      line-height: 1;
+      display: inline-block;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+    }
+
+    .cell-buildings .bldg-icon.landmark {
+      font-size: clamp(0.85rem, 3.8vw, 1.2rem);
+    }
+
+    .cell-buildings .bldg-label {
+      display: block;
+      width: 100%;
+      font-size: 0.38rem;
+      text-align: center;
+      color: rgba(90, 74, 106, 0.7);
+      margin-top: 1px;
+    }
+
+    .cell-fee {
       position: absolute;
       bottom: 2px;
-      right: 3px;
-      font-size: 0.42rem;
-      opacity: 0.65;
+      left: 2px;
+      right: 2px;
+      text-align: center;
+      font-size: 0.4rem;
+      line-height: 1.15;
+      font-weight: 800;
+      color: rgba(70, 55, 90, 0.85);
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 6px;
+      padding: 1px 2px;
+    }
+
+    .cell-fee .fee-type {
+      display: block;
+      font-size: 0.34rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .cell.owned .cell-fee {
+      background: rgba(255, 255, 255, 0.7);
     }
 
     .token {
@@ -604,6 +648,14 @@
       return n.toLocaleString("ko-KR") + "원";
     }
 
+    function formatMoneyShort(n) {
+      if (n >= 10000) {
+        const man = n / 10000;
+        return (Number.isInteger(man) ? man : man.toFixed(1)) + "만";
+      }
+      return n.toLocaleString("ko-KR") + "원";
+    }
+
     function sleep(ms) {
       return new Promise((r) => setTimeout(r, ms));
     }
@@ -613,6 +665,20 @@
       if (level <= 3) return "🏡".repeat(level);
       if (level <= 6) return "🏢".repeat(level - 3);
       return "🏰";
+    }
+
+    function renderBuildingHTML(level) {
+      if (level <= 0) return "";
+      let icons = "";
+      if (level <= 3) {
+        icons = Array.from({ length: level }, () => '<span class="bldg-icon">🏡</span>').join("");
+      } else if (level <= 6) {
+        icons = Array.from({ length: level - 3 }, () => '<span class="bldg-icon">🏢</span>').join("");
+      } else {
+        icons = '<span class="bldg-icon landmark">🏰</span>';
+      }
+      const label = BUILDING_LABELS[level] || "";
+      return `${icons}<span class="bldg-label">${label}</span>`;
     }
 
     function getNextUpgradeLabel(level) {
@@ -749,16 +815,16 @@
           name.textContent = CELL_NAMES[pathIdx];
           cell.appendChild(name);
 
-          const buildings = document.createElement("span");
+          const buildings = document.createElement("div");
           buildings.className = "cell-buildings";
           buildings.id = `buildings-${pathIdx}`;
           cell.appendChild(buildings);
 
           if (pathIdx !== START_CELL) {
-            const price = document.createElement("span");
-            price.className = "cell-price";
-            price.textContent = formatMoney(LAND_PRICES[pathIdx]);
-            cell.appendChild(price);
+            const fee = document.createElement("div");
+            fee.className = "cell-fee";
+            fee.id = `fee-${pathIdx}`;
+            cell.appendChild(fee);
           }
         }
         board.appendChild(cell);
@@ -774,15 +840,33 @@
 
       const prop = properties[pathIdx];
       const bldg = document.getElementById(`buildings-${pathIdx}`);
-      if (bldg) bldg.textContent = getBuildingEmoji(prop.buildingLevel);
+      if (bldg) {
+        bldg.innerHTML = prop.buildingLevel > 0
+          ? renderBuildingHTML(prop.buildingLevel)
+          : "";
+      }
+
+      const feeEl = document.getElementById(`fee-${pathIdx}`);
+      if (feeEl && pathIdx !== START_CELL) {
+        if (prop.owner !== null) {
+          const toll = TOLLS[prop.buildingLevel];
+          feeEl.innerHTML =
+            `<span class="fee-type">통행료</span>${formatMoneyShort(toll)}`;
+        } else {
+          feeEl.innerHTML =
+            `<span class="fee-type">땅값</span>${formatMoneyShort(LAND_PRICES[pathIdx])}`;
+        }
+      }
 
       if (prop.owner !== null) {
         const color = PLAYER_COLORS[prop.owner];
         cell.style.background = color.bg;
         cell.style.borderColor = color.dark;
+        cell.classList.add("owned");
       } else if (pathIdx !== START_CELL) {
         cell.style.background = "";
         cell.style.borderColor = "";
+        cell.classList.remove("owned");
       }
     }
 
