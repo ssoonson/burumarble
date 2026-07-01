@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎲 부루마블 게임</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: linear-gradient(135deg, #ffeef8 0%, #e8f4ff 50%, #fff5e6 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #5a4a6a;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      color: #ff7eb3;
+      text-shadow: 2px 2px 0 #fff;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #9b8ab0;
+      margin-bottom: 24px;
+    }
+
+    /* ── Setup Modal ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 220, 240, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .setup-card {
+      background: #fff;
+      border-radius: 28px;
+      padding: 32px 36px;
+      box-shadow: 0 12px 40px rgba(255, 126, 179, 0.25);
+      max-width: 420px;
+      width: 92%;
+      text-align: center;
+    }
+
+    .setup-card h2 {
+      font-size: 1.5rem;
+      color: #ff7eb3;
+      margin-bottom: 20px;
+    }
+
+    .setup-section {
+      margin-bottom: 24px;
+    }
+
+    .setup-section label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #7a6a8a;
+    }
+
+    .player-count-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .count-btn {
+      width: 52px;
+      height: 52px;
+      border: 3px solid #ffd6e8;
+      border-radius: 50%;
+      background: #fff5fa;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #c97aa0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .count-btn:hover {
+      background: #ffe0f0;
+      transform: scale(1.08);
+    }
+
+    .count-btn.selected {
+      background: #ff9ec5;
+      border-color: #ff7eb3;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(255, 126, 179, 0.4);
+    }
+
+    .emoji-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .player-label {
+      font-weight: 600;
+      min-width: 70px;
+      text-align: right;
+      color: #9b7aaa;
+    }
+
+    .emoji-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .emoji-btn {
+      width: 48px;
+      height: 48px;
+      border: 3px solid transparent;
+      border-radius: 16px;
+      background: #f5f0ff;
+      font-size: 1.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .emoji-btn:hover:not(:disabled) {
+      transform: scale(1.12);
+      background: #ede5ff;
+    }
+
+    .emoji-btn.selected {
+      border-color: #b8a0ff;
+      background: #ede5ff;
+      box-shadow: 0 4px 10px rgba(184, 160, 255, 0.4);
+    }
+
+    .emoji-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .start-btn {
+      margin-top: 8px;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ff9ec5, #b8a0ff);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 126, 179, 0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .start-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 126, 179, 0.45);
+    }
+
+    .start-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .setup-error {
+      color: #ff6b8a;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      min-height: 1.2em;
+    }
+
+    /* ── Game Layout ── */
+    .game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .game-area.hidden {
+      display: none;
+    }
+
+    /* ── Board ── */
+    .board-wrapper {
+      position: relative;
+      width: min(92vw, 480px);
+      aspect-ratio: 1;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(7, 1fr);
+      gap: 4px;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 20px;
+      padding: 8px;
+      box-shadow: 0 8px 32px rgba(184, 160, 255, 0.2);
+    }
+
+    .cell {
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: rgba(90, 74, 106, 0.5);
+      transition: transform 0.15s;
+    }
+
+    .cell.path {
+      border: 2px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .cell.center {
+      background: linear-gradient(135deg, #fff9f0, #f0f8ff) !important;
+      border: 2px dashed #e8d8f0;
+      border-radius: 16px;
+      font-size: 2.5rem;
+      color: #d4c0e8;
+    }
+
+  .cell.center::after {
+      content: "🎲";
+      opacity: 0.5;
+    }
+
+    /* Pastel path colors assigned via data-path-index */
+    .cell.path[data-path-index="0"],  .cell.path[data-path-index="8"],  .cell.path[data-path-index="16"] { background: #ffd6e8; }
+    .cell.path[data-path-index="1"],  .cell.path[data-path-index="9"],  .cell.path[data-path-index="17"] { background: #ffe8d6; }
+    .cell.path[data-path-index="2"],  .cell.path[data-path-index="10"], .cell.path[data-path-index="18"] { background: #fff5c2; }
+    .cell.path[data-path-index="3"],  .cell.path[data-path-index="11"], .cell.path[data-path-index="19"] { background: #d6fff0; }
+    .cell.path[data-path-index="4"],  .cell.path[data-path-index="12"], .cell.path[data-path-index="20"] { background: #f0d6ff; }
+    .cell.path[data-path-index="5"],  .cell.path[data-path-index="13"], .cell.path[data-path-index="21"] { background: #d6f5ff; }
+    .cell.path[data-path-index="6"],  .cell.path[data-path-index="14"], .cell.path[data-path-index="22"] { background: #e0ffd6; }
+    .cell.path[data-path-index="7"],  .cell.path[data-path-index="15"], .cell.path[data-path-index="23"] { background: #ffe0f5; }
+
+    .cell-number {
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-size: 0.55rem;
+      opacity: 0.6;
+    }
+
+    .token {
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      line-height: 1;
+      position: absolute;
+      z-index: 2;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.15));
+      transition: transform 0.2s;
+      pointer-events: none;
+    }
+
+    .token.bounce {
+      animation: bounce 0.35s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%       { transform: translateY(-8px) scale(1.15); }
+    }
+
+    .tokens-container {
+      position: absolute;
+      inset: 8px;
+      pointer-events: none;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .player-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .player-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: #fff;
+      border: 3px solid #f0e8ff;
+      font-size: 0.9rem;
+      transition: all 0.25s;
+    }
+
+    .player-badge.active {
+      border-color: #ff9ec5;
+      background: #fff5fa;
+      box-shadow: 0 4px 14px rgba(255, 126, 179, 0.3);
+      transform: scale(1.05);
+    }
+
+    .player-badge .emoji {
+      font-size: 1.4rem;
+    }
+
+    .dice-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .dice-display {
+      width: 64px;
+      height: 64px;
+      background: #fff;
+      border-radius: 18px;
+      border: 3px solid #ffd6e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #ff7eb3;
+      box-shadow: 0 4px 12px rgba(255, 126, 179, 0.2);
+    }
+
+    .dice-display.rolling {
+      animation: shake 0.4s ease infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25%       { transform: rotate(-8deg); }
+      75%       { transform: rotate(8deg); }
+    }
+
+    .roll-btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #a8e6cf, #88d8f0);
+      color: #3a6a5a;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(136, 216, 240, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .roll-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(136, 216, 240, 0.5);
+    }
+
+    .roll-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .turn-message {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9b7aaa;
+      min-height: 1.4em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎲 부루마블</h1>
+  <p class="subtitle">친구들과 함께 보드판을 돌아보자!</p>
+
+  <!-- Setup -->
+  <div class="overlay" id="setupOverlay">
+    <div class="setup-card">
+      <h2>게임 준비 🌈</h2>
+
+      <div class="setup-section">
+        <label>몇 명이서 할까요?</label>
+        <div class="player-count-btns" id="countBtns">
+          <button class="count-btn" data-count="2">2</button>
+          <button class="count-btn" data-count="3">3</button>
+          <button class="count-btn selected" data-count="4">4</button>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <label>동물 친구를 골라주세요!</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+
+      <button class="start-btn" id="startBtn">게임 시작! 🚀</button>
+      <p class="setup-error" id="setupError"></p>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div class="game-area hidden" id="gameArea">
+    <div class="board-wrapper">
+      <div class="board" id="board"></div>
+      <div class="tokens-container" id="tokensContainer"></div>
+    </div>
+
+    <div class="controls">
+      <div class="player-status" id="playerStatus"></div>
+      <p class="turn-message" id="turnMessage"></p>
+      <div class="dice-area">
+        <div class="dice-display" id="diceDisplay">?</div>
+        <button class="roll-btn" id="rollBtn">🎲 주사위 굴리기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EMOJIS = ["🐶", "🐱", "🦊", "🐰"];
+    const GRID_SIZE = 7;
+    const TOTAL_PATH = 24;
+
+    // Clockwise path: grid cell indices (row*7 + col), starting at top-left corner = 0
+    const PATH_GRID_INDICES = [
+      0, 1, 2, 3, 4, 5, 6,
+      13, 20, 27, 34, 41,
+      48, 47, 46, 45, 44, 43, 42,
+      35, 28, 21, 14, 7
+    ];
+
+    // Center cells occupy grid positions 8-12, 15-19, 22-26, 29-33, 36-40
+    const CENTER_INDICES = new Set();
+    for (let r = 1; r <= 5; r++) {
+      for (let c = 1; c <= 5; c++) {
+        CENTER_INDICES.add(r * GRID_SIZE + c);
+      }
+    }
+
+    const pathIndexByGrid = {};
+    PATH_GRID_INDICES.forEach((gi, pi) => { pathIndexByGrid[gi] = pi; });
+
+    let playerCount = 4;
+    let selectedEmojis = ["🐶", "🐱", "🦊", "🐰"];
+    let players = [];
+    let currentPlayer = 0;
+    let isMoving = false;
+    let cellElements = {};
+    let boardRect = null;
+
+    // ── Setup ──
+    const countBtns = document.getElementById("countBtns");
+    const emojiPicker = document.getElementById("emojiPicker");
+    const startBtn = document.getElementById("startBtn");
+    const setupError = document.getElementById("setupError");
+    const setupOverlay = document.getElementById("setupOverlay");
+    const gameArea = document.getElementById("gameArea");
+
+    countBtns.addEventListener("click", (e) => {
+      const btn = e.target.closest(".count-btn");
+      if (!btn) return;
+      playerCount = parseInt(btn.dataset.count, 10);
+      countBtns.querySelectorAll(".count-btn").forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      renderEmojiPicker();
+    });
+
+    function renderEmojiPicker() {
+      emojiPicker.innerHTML = "";
+      for (let i = 0; i < playerCount; i++) {
+        const row = document.createElement("div");
+        row.className = "player-row";
+
+        const label = document.createElement("span");
+        label.className = "player-label";
+        label.textContent = `${i + 1}번 친구`;
+
+        const options = document.createElement("div");
+        options.className = "emoji-options";
+
+        EMOJIS.forEach((emoji) => {
+          const btn = document.createElement("button");
+          btn.className = "emoji-btn";
+          btn.textContent = emoji;
+          btn.dataset.player = i;
+          btn.dataset.emoji = emoji;
+          if (selectedEmojis[i] === emoji) btn.classList.add("selected");
+          btn.addEventListener("click", () => selectEmoji(i, emoji));
+          options.appendChild(btn);
+        });
+
+        row.appendChild(label);
+        row.appendChild(options);
+        emojiPicker.appendChild(row);
+      }
+      updateEmojiAvailability();
+    }
+
+    function selectEmoji(playerIdx, emoji) {
+      selectedEmojis[playerIdx] = emoji;
+      renderEmojiPicker();
+    }
+
+    function updateEmojiAvailability() {
+      const used = new Set();
+      for (let i = 0; i < playerCount; i++) {
+        if (selectedEmojis[i]) used.add(selectedEmojis[i]);
+      }
+      emojiPicker.querySelectorAll(".emoji-btn").forEach((btn) => {
+        const pIdx = parseInt(btn.dataset.player, 10);
+        const emoji = btn.dataset.emoji;
+        const isSelected = selectedEmojis[pIdx] === emoji;
+        const isUsedByOther = used.has(emoji) && !isSelected;
+        btn.disabled = isUsedByOther;
+        btn.classList.toggle("selected", isSelected);
+      });
+
+      const unique = new Set(selectedEmojis.slice(0, playerCount));
+      setupError.textContent =
+        unique.size < playerCount ? "같은 동물은 두 명이 못 써요! 다른 친구를 골라주세요 🙏" : "";
+    }
+
+    startBtn.addEventListener("click", () => {
+      const chosen = selectedEmojis.slice(0, playerCount);
+      if (new Set(chosen).size < playerCount) {
+        setupError.textContent = "모든 친구가 다른 동물을 골라야 해요!";
+        return;
+      }
+      startGame(chosen);
+    });
+
+    renderEmojiPicker();
+
+    // ── Board ──
+    function gridToPlacement(index) {
+      const row = Math.floor(index / GRID_SIZE) + 1;
+      const col = (index % GRID_SIZE) + 1;
+      return { row, col };
+    }
+
+    function buildBoard() {
+      const board = document.getElementById("board");
+      board.innerHTML = "";
+      cellElements = {};
+
+      const center = document.createElement("div");
+      center.className = "cell center";
+      center.style.gridRow = "2 / span 5";
+      center.style.gridColumn = "2 / span 5";
+      board.appendChild(center);
+
+      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        if (CENTER_INDICES.has(i)) continue;
+
+        const cell = document.createElement("div");
+        cell.className = "cell path";
+        cell.dataset.gridIndex = i;
+        const { row, col } = gridToPlacement(i);
+        cell.style.gridRow = row;
+        cell.style.gridColumn = col;
+
+        const pathIdx = pathIndexByGrid[i];
+        if (pathIdx !== undefined) {
+          cell.dataset.pathIndex = pathIdx;
+          const num = document.createElement("span");
+          num.className = "cell-number";
+          num.textContent = pathIdx;
+          cell.appendChild(num);
+        }
+
+        board.appendChild(cell);
+        cellElements[i] = cell;
+      }
+    }
+
+    function getCellCenter(gridIndex) {
+      const cell = cellElements[gridIndex];
+      const board = document.getElementById("board");
+      const cellRect = cell.getBoundingClientRect();
+      const wrapperRect = document.querySelector(".board-wrapper").getBoundingClientRect();
+      return {
+        x: cellRect.left - wrapperRect.left + cellRect.width / 2,
+        y: cellRect.top - wrapperRect.top + cellRect.height / 2
+      };
+    }
+
+    function positionToken(tokenEl, gridIndex, stackOffset = 0) {
+      const pos = getCellCenter(gridIndex);
+      const offsetX = (stackOffset % 2) * 14 - 7;
+      const offsetY = Math.floor(stackOffset / 2) * 14 - 7;
+      tokenEl.style.left = `${pos.x + offsetX}px`;
+      tokenEl.style.top = `${pos.y + offsetY}px`;
+      tokenEl.style.transform = "translate(-50%, -50%)";
+    }
+
+    function renderTokens(animate = false) {
+      const container = document.getElementById("tokensContainer");
+      container.innerHTML = "";
+
+      // Group players by position for stacking
+      const byPos = {};
+      players.forEach((p, idx) => {
+        const gi = PATH_GRID_INDICES[p.position];
+        if (!byPos[gi]) byPos[gi] = [];
+        byPos[gi].push(idx);
+      });
+
+      players.forEach((p, idx) => {
+        const gi = PATH_GRID_INDICES[p.position];
+        const stackIdx = byPos[gi].indexOf(idx);
+
+        const token = document.createElement("div");
+        token.className = "token";
+        token.id = `token-${idx}`;
+        token.textContent = p.emoji;
+        if (animate && idx === currentPlayer) token.classList.add("bounce");
+        container.appendChild(token);
+        positionToken(token, gi, stackIdx);
+      });
+    }
+
+    function renderPlayerStatus() {
+      const status = document.getElementById("playerStatus");
+      status.innerHTML = "";
+      players.forEach((p, idx) => {
+        const badge = document.createElement("div");
+        badge.className = "player-badge" + (idx === currentPlayer ? " active" : "");
+        badge.innerHTML = `<span class="emoji">${p.emoji}</span><span>${idx + 1}번</span>`;
+        status.appendChild(badge);
+      });
+    }
+
+    function updateTurnMessage(extra = "") {
+      const msg = document.getElementById("turnMessage");
+      const p = players[currentPlayer];
+      msg.textContent = extra || `${p.emoji} ${currentPlayer + 1}번 친구 차례예요!`;
+    }
+
+    // ── Game flow ──
+    function startGame(emojis) {
+      players = emojis.map((emoji) => ({ emoji, position: 0 }));
+      currentPlayer = 0;
+      isMoving = false;
+
+      setupOverlay.classList.add("hidden");
+      gameArea.classList.remove("hidden");
+
+      buildBoard();
+      // Wait for layout
+      requestAnimationFrame(() => {
+        renderTokens();
+        renderPlayerStatus();
+        updateTurnMessage();
+      });
+    }
+
+  window.addEventListener("resize", () => {
+      if (!gameArea.classList.contains("hidden")) renderTokens();
+    });
+
+    const rollBtn = document.getElementById("rollBtn");
+    const diceDisplay = document.getElementById("diceDisplay");
+
+    rollBtn.addEventListener("click", async () => {
+      if (isMoving) return;
+      isMoving = true;
+      rollBtn.disabled = true;
+
+      diceDisplay.classList.add("rolling");
+      diceDisplay.textContent = "🎲";
+
+      // Brief rolling animation
+      await sleep(500);
+
+      const roll = Math.floor(Math.random() * 6) + 1;
+      diceDisplay.classList.remove("rolling");
+      diceDisplay.textContent = roll;
+
+      updateTurnMessage(`${players[currentPlayer].emoji}이(가) ${roll}칸 이동해요!`);
+
+      await movePlayer(currentPlayer, roll);
+
+      currentPlayer = (currentPlayer + 1) % players.length;
+      renderPlayerStatus();
+      updateTurnMessage();
+      renderTokens();
+
+      isMoving = false;
+      rollBtn.disabled = false;
+    });
+
+    async function movePlayer(playerIdx, steps) {
+      for (let s = 0; s < steps; s++) {
+        players[playerIdx].position = (players[playerIdx].position + 1) % TOTAL_PATH;
+        renderTokens(true);
+        await sleep(350);
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
