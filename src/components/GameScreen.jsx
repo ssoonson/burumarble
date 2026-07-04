@@ -1,0 +1,149 @@
+import { useEffect, useRef, useState } from "react";
+import Board from "./Board.jsx";
+import BalancePanel from "./BalancePanel.jsx";
+import QuizModal from "./QuizModal.jsx";
+import ActionModal from "./ActionModal.jsx";
+import BankruptModal from "./BankruptModal.jsx";
+import GameOverModal from "./GameOverModal.jsx";
+import { PLAYER_COLORS, TOTAL_PATH, DEFAULT_QUIZZES } from "../constants.js";
+
+const MOVE_STEP_MS = 350;
+const ROLL_ANIMATION_MS = 500;
+
+export default function GameScreen({ game, dispatch, quizPool, registeredCount, usingCustom, onRestart }) {
+  const [diceRolling, setDiceRolling] = useState(false);
+  const [diceValue, setDiceValue] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animatingPos, setAnimatingPos] = useState(null); // { playerIdx, pos }
+  const [movingMessage, setMovingMessage] = useState(null);
+  const [activeQuiz, setActiveQuiz] = useState(null);
+  const moveTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (moveTimerRef.current) clearInterval(moveTimerRef.current); };
+  }, []);
+
+  useEffect(() => {
+    if (game.turnPhase === "quiz") {
+      const pool = quizPool.length > 0 ? quizPool : DEFAULT_QUIZZES;
+      setActiveQuiz(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.turnPhase === "quiz", game.pendingLanding]);
+
+  function handleRoll() {
+    if (game.turnPhase !== "idle" || isAnimating || diceRolling) return;
+    const roll = Math.floor(Math.random() * 6) + 1;
+    setDiceRolling(true);
+    setDiceValue(null);
+    setTimeout(() => {
+      setDiceRolling(false);
+      setDiceValue(roll);
+      animateMove(roll);
+    }, ROLL_ANIMATION_MS);
+  }
+
+  function animateMove(steps) {
+    const playerIdx = game.currentPlayer;
+    const startPos = game.players[playerIdx].position;
+    const emoji = game.players[playerIdx].emoji;
+    setMovingMessage(`${emoji}이(가) ${steps}칸 이동해요!`);
+    setIsAnimating(true);
+    let stepCount = 0;
+    moveTimerRef.current = setInterval(() => {
+      stepCount++;
+      const pos = (startPos + stepCount) % TOTAL_PATH;
+      setAnimatingPos({ playerIdx, pos });
+      if (stepCount >= steps) {
+        clearInterval(moveTimerRef.current);
+        moveTimerRef.current = null;
+        setIsAnimating(false);
+        setAnimatingPos(null);
+        setMovingMessage(null);
+        dispatch({ type: "MOVE_PLAYER", steps });
+      }
+    }, MOVE_STEP_MS);
+  }
+
+  const displayPositions = {};
+  if (animatingPos) displayPositions[animatingPos.playerIdx] = animatingPos.pos;
+
+  const currentPlayer = game.players[game.currentPlayer];
+  const rollDisabled = game.turnPhase !== "idle" || isAnimating || diceRolling;
+  const badgeLabel = usingCustom ? `총 ${registeredCount}개 문제 등록됨` : `기본 문제 ${registeredCount}개`;
+
+  const landingProperty = game.pendingLanding && game.pendingLanding.pathIdx != null
+    ? game.properties[game.pendingLanding.pathIdx]
+    : null;
+
+  return (
+    <div className="game-shell">
+      <div className="quiz-status-bar">📝 등록된 문제: <span className="badge">{badgeLabel}</span></div>
+
+      <div className="game-main">
+        <BalancePanel players={game.players} currentPlayer={game.currentPlayer} />
+
+        <div className="board-column">
+          <Board properties={game.properties} players={game.players} displayPositions={displayPositions} />
+
+          <div className="controls">
+            <div className="player-status">
+              {game.players.map((p, idx) => (
+                <div
+                  key={idx}
+                  className={`player-badge${idx === game.currentPlayer ? " active" : ""}${p.bankrupt ? " bankrupt" : ""}`}
+                  style={{ borderColor: idx === game.currentPlayer ? PLAYER_COLORS[idx].dark : undefined }}
+                >
+                  <span className="emoji">{p.emoji}</span>
+                  <span>{idx + 1}번</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="turn-message">{movingMessage || game.turnMessage}</p>
+
+            <div className="dice-area">
+              <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
+                {diceRolling ? "🎲" : (diceValue ?? "?")}
+              </div>
+              <button className="roll-btn" disabled={rollDisabled} onClick={handleRoll}>
+                🎲 주사위 굴리기
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {game.turnPhase === "quiz" && activeQuiz && (
+        <QuizModal
+          quiz={activeQuiz}
+          onResolve={(result) => dispatch({ type: "ANSWER_QUIZ", result })}
+        />
+      )}
+
+      {game.turnPhase === "action" && game.pendingLanding && landingProperty && (
+        <ActionModal
+          landing={game.pendingLanding}
+          player={currentPlayer}
+          buildingLevel={landingProperty.buildingLevel}
+          onChoose={(choice) => dispatch({ type: "CHOOSE_ACTION", choice })}
+        />
+      )}
+
+      {game.turnPhase === "bankrupt" && (
+        <BankruptModal
+          player={currentPlayer}
+          playerIndex={game.currentPlayer}
+          onAck={() => dispatch({ type: "ACK_BANKRUPT" })}
+        />
+      )}
+
+      {game.turnPhase === "gameover" && (
+        <GameOverModal
+          winner={game.winner != null ? game.players[game.winner] : null}
+          onRestart={onRestart}
+        />
+      )}
+    </div>
+  );
+}
