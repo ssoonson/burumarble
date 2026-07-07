@@ -5,7 +5,11 @@ import QuizModal from "./QuizModal.jsx";
 import ActionModal from "./ActionModal.jsx";
 import BankruptModal from "./BankruptModal.jsx";
 import GameOverModal from "./GameOverModal.jsx";
-import { PLAYER_COLORS, TOTAL_PATH, DEFAULT_QUIZZES } from "../constants.js";
+import IslandModal from "./IslandModal.jsx";
+import SpaceTravelModal from "./SpaceTravelModal.jsx";
+import SpaceOfferModal from "./SpaceOfferModal.jsx";
+import GoldenKeyModal from "./GoldenKeyModal.jsx";
+import { PLAYER_COLORS, TOTAL_PATH, DEFAULT_QUIZZES, GOLDEN_KEY_CARDS } from "../constants.js";
 
 const MOVE_STEP_MS = 350;
 const ROLL_ANIMATION_MS = 500;
@@ -22,6 +26,7 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
   const [animatingPos, setAnimatingPos] = useState(null); // { playerIdx, pos }
   const [movingMessage, setMovingMessage] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
   const moveTimerRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +40,13 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.turnPhase === "quiz", game.pendingLanding]);
+
+  useEffect(() => {
+    if (game.turnPhase === "goldenkey") {
+      setActiveCard(GOLDEN_KEY_CARDS[Math.floor(Math.random() * GOLDEN_KEY_CARDS.length)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.turnPhase === "goldenkey", game.pendingLanding]);
 
   function handleRoll() {
     if (game.turnPhase !== "idle" || isAnimating || diceRolling) return;
@@ -144,6 +156,32 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
           player={currentPlayer}
           playerIndex={game.currentPlayer}
           onAck={() => dispatch({ type: "ACK_BANKRUPT" })}
+        />
+      )}
+
+      {game.turnPhase === "island" && (
+        <IslandModal
+          onResolve={(die1, die2) => dispatch({ type: "ISLAND_ROLL", die1, die2 })}
+        />
+      )}
+
+      {game.turnPhase === "space" && (
+        <SpaceTravelModal
+          onResolve={(steps) => dispatch({ type: "SPACE_ROLL", steps })}
+        />
+      )}
+
+      {game.turnPhase === "spaceOffer" && game.pendingLanding && (
+        <SpaceOfferModal
+          landing={game.pendingLanding}
+          onChoose={(choice) => dispatch({ type: "RESOLVE_SPACE_OFFER", choice })}
+        />
+      )}
+
+      {game.turnPhase === "goldenkey" && activeCard && (
+        <GoldenKeyModal
+          card={activeCard}
+          onAck={() => dispatch({ type: "RESOLVE_GOLDEN_KEY", effect: activeCard.effect })}
         />
       )}
 

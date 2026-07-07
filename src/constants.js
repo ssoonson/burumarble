@@ -18,13 +18,33 @@ export const PLAYER_COLORS = [
 
 export const CELL_NAMES = [
   "서울", "도쿄", "베이징", "방콕", "하노이", "뉴델리",
-  "런던", "파리", "베를린", "로마", "마드리드", "모스크바",
-  "워싱턴", "오타와", "멕시코시티", "브라질리아", "부에노스아이레스", "캔버라",
-  "카이로", "나이로비", "프리토리아", "아테네", "암스테르담", "헬싱키",
+  "무인도", "파리", "베를린", "로마", "마드리드", "모스크바",
+  "우주여행", "오타와", "멕시코시티", "브라질리아", "부에노스아이레스", "캔버라",
+  "황금열쇠", "나이로비", "프리토리아", "아테네", "암스테르담", "헬싱키",
+];
+
+export const ISLAND_INDEX = 6;
+export const SPACE_INDEX = 12;
+export const GOLDENKEY_INDEX = 18;
+export const SPECIAL_INDICES = new Set([ISLAND_INDEX, SPACE_INDEX, GOLDENKEY_INDEX]);
+
+export const SPECIAL_CELL_ICONS = {
+  [ISLAND_INDEX]: "🏝️",
+  [SPACE_INDEX]: "🚀",
+  [GOLDENKEY_INDEX]: "🔑",
+};
+
+export const GOLDEN_KEY_CARDS = [
+  { id: "fine", text: "세금 조사에 걸렸어요! 벌금 100,000원을 내세요.", effect: { type: "fine", amount: 100000 } },
+  { id: "bonus", text: "깜짝 보너스! 150,000원을 받으세요.", effect: { type: "bonus", amount: 150000 } },
+  { id: "toIsland", text: "길을 잘못 들었어요! 무인도로 직행하세요.", effect: { type: "gotoIsland" } },
+  { id: "toSpace", text: "우주선에 탑승했어요! 우주여행 칸으로 직행하세요.", effect: { type: "gotoSpace" } },
+  { id: "forward", text: "순간 이동! 3칸 앞으로 전진하세요.", effect: { type: "moveForward", steps: 3 } },
+  { id: "forfeit", text: "벌칙 타임! 친구들 앞에서 3초 동안 사자처럼 포효하세요! 🦁", effect: { type: "forfeit" } },
 ];
 
 export const LAND_PRICES = CELL_NAMES.map((_, i) =>
-  i === 0 ? 0 : 60000 + Math.floor(i * 8000)
+  i === 0 || SPECIAL_INDICES.has(i) ? 0 : 60000 + Math.floor(i * 8000)
 );
 
 export const UPGRADE_COSTS = [0, 50000, 70000, 100000, 150000, 220000, 320000, 500000];

@@ -7,6 +7,8 @@ import {
   PATH_GRID_INDICES,
   CENTER_INDICES,
   PLAYER_COLORS,
+  SPECIAL_INDICES,
+  SPECIAL_CELL_ICONS,
 } from "../constants.js";
 import { formatMoneyShort, buildingIcons, buildingLabel } from "../utils.js";
 
@@ -53,29 +55,35 @@ export default function Board({ properties, players, displayPositions }) {
           <>
             <span className="cell-number">{pathIdx}</span>
             <span className="cell-name">{CELL_NAMES[pathIdx]}</span>
-            <div className="cell-buildings">
-              {prop.buildingLevel > 0 ? (
-                <>
-                  {buildingIcons(prop.buildingLevel).map((icon, i) => (
-                    <span className={`bldg-icon${prop.buildingLevel >= 7 ? " landmark" : ""}`} key={i}>{icon}</span>
-                  ))}
-                  <span className="bldg-label">{buildingLabel(prop.buildingLevel)}</span>
-                </>
-              ) : owned && pathIdx !== START_CELL ? (
-                <>
-                  <span className="bldg-icon">🚩</span>
-                  <span className="bldg-label">구매완료</span>
-                </>
-              ) : null}
-            </div>
-            {pathIdx !== START_CELL && (
-              <div className="cell-fee">
-                {owned ? (
-                  <><span className="fee-type">통행료</span>{formatMoneyShort(TOLLS[prop.buildingLevel])}</>
-                ) : (
-                  <><span className="fee-type">땅값</span>{formatMoneyShort(LAND_PRICES[pathIdx])}</>
+            {SPECIAL_INDICES.has(pathIdx) ? (
+              <div className="special-cell-icon">{SPECIAL_CELL_ICONS[pathIdx]}</div>
+            ) : (
+              <>
+                <div className="cell-buildings">
+                  {prop.buildingLevel > 0 ? (
+                    <>
+                      {buildingIcons(prop.buildingLevel).map((icon, i) => (
+                        <span className={`bldg-icon${prop.buildingLevel >= 7 ? " landmark" : ""}`} key={i}>{icon}</span>
+                      ))}
+                      <span className="bldg-label">{buildingLabel(prop.buildingLevel)}</span>
+                    </>
+                  ) : owned && pathIdx !== START_CELL ? (
+                    <>
+                      <span className="bldg-icon">🚩</span>
+                      <span className="bldg-label">구매완료</span>
+                    </>
+                  ) : null}
+                </div>
+                {pathIdx !== START_CELL && (
+                  <div className="cell-fee">
+                    {owned ? (
+                      <><span className="fee-type">통행료</span>{formatMoneyShort(TOLLS[prop.buildingLevel])}</>
+                    ) : (
+                      <><span className="fee-type">땅값</span>{formatMoneyShort(LAND_PRICES[pathIdx])}</>
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
             {tokens.length > 0 && (
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>

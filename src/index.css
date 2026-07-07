@@ -400,6 +400,14 @@ button {
   color: rgba(70,55,90,0.9); background: rgba(255,255,255,0.7); border-radius: 8px; padding: 2px 3px;
 }
 .cell-fee .fee-type { display: block; font-size: clamp(0.42rem, 1.2vw, 0.52rem); font-weight: 700; opacity: 0.85; }
+.special-cell-icon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+}
 
 .token {
   font-size: clamp(1.4rem, 4.5vw, 2.1rem);
