@@ -9,10 +9,15 @@ import { PLAYER_COLORS, TOTAL_PATH, DEFAULT_QUIZZES } from "../constants.js";
 
 const MOVE_STEP_MS = 350;
 const ROLL_ANIMATION_MS = 500;
+const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+function rollDie() {
+  return Math.floor(Math.random() * 6) + 1;
+}
 
 export default function GameScreen({ game, dispatch, quizPool, registeredCount, usingCustom, onRestart }) {
   const [diceRolling, setDiceRolling] = useState(false);
-  const [diceValue, setDiceValue] = useState(null);
+  const [diceValues, setDiceValues] = useState(null); // [die1, die2]
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatingPos, setAnimatingPos] = useState(null); // { playerIdx, pos }
   const [movingMessage, setMovingMessage] = useState(null);
@@ -33,21 +38,22 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
 
   function handleRoll() {
     if (game.turnPhase !== "idle" || isAnimating || diceRolling) return;
-    const roll = Math.floor(Math.random() * 6) + 1;
+    const die1 = rollDie();
+    const die2 = rollDie();
     setDiceRolling(true);
-    setDiceValue(null);
+    setDiceValues(null);
     setTimeout(() => {
       setDiceRolling(false);
-      setDiceValue(roll);
-      animateMove(roll);
+      setDiceValues([die1, die2]);
+      animateMove(die1 + die2, die1, die2);
     }, ROLL_ANIMATION_MS);
   }
 
-  function animateMove(steps) {
+  function animateMove(steps, die1, die2) {
     const playerIdx = game.currentPlayer;
     const startPos = game.players[playerIdx].position;
     const emoji = game.players[playerIdx].emoji;
-    setMovingMessage(`${emoji}이(가) ${steps}칸 이동해요!`);
+    setMovingMessage(`${emoji}이(가) 주사위 ${die1}+${die2}=${steps}칸 이동해요!`);
     setIsAnimating(true);
     let stepCount = 0;
     moveTimerRef.current = setInterval(() => {
@@ -104,7 +110,10 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
 
             <div className="dice-area">
               <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
-                {diceRolling ? "🎲" : (diceValue ?? "?")}
+                {diceRolling ? "🎲" : (diceValues ? DICE_FACES[diceValues[0] - 1] : "?")}
+              </div>
+              <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
+                {diceRolling ? "🎲" : (diceValues ? DICE_FACES[diceValues[1] - 1] : "?")}
               </div>
               <button className="roll-btn" disabled={rollDisabled} onClick={handleRoll}>
                 🎲 주사위 굴리기
