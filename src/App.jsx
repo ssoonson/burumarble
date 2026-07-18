@@ -51,7 +51,7 @@ export default function App() {
     if (!game.toast) return;
     setToastMsg(game.toast);
     dispatch({ type: "CLEAR_TOAST" });
-    const t = setTimeout(() => setToastMsg(null), 2500);
+    const t = setTimeout(() => setToastMsg(null), 5000);
     return () => clearTimeout(t);
   }, [game.toast]);
 
