@@ -9,7 +9,6 @@ import {
   serverTimestamp,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "./config.js";
 import { createInitialRoomState } from "./useRoom.js";
@@ -225,20 +224,24 @@ export async function listRoomsBySession(classSessionId) {
 export async function listMyRooms(createdBy) {
   const q = query(
     collection(db, "rooms"),
-    where("createdBy", "==", createdBy),
-    orderBy("createdAt", "desc")
+    where("createdBy", "==", createdBy)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  // 클라이언트에서 정렬 (복합 인덱스 불필요)
+  rooms.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+  return rooms;
 }
 
 /** 교사가 만든 문제 세트 목록 */
 export async function listMyQuizSets(createdBy) {
   const q = query(
     collection(db, "quizSets"),
-    where("createdBy", "==", createdBy),
-    orderBy("createdAt", "desc")
+    where("createdBy", "==", createdBy)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const sets = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  // 클라이언트에서 정렬 (복합 인덱스 불필요)
+  sets.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
+  return sets;
 }
