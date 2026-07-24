@@ -151,7 +151,13 @@ export default function Board({ properties, players, displayPositions, diceRolli
             const isSpecial = SPECIAL_INDICES.has(pathIdx);
             let topColor = isSpecial ? CORNER_TOP_COLOR : DEFAULT_TOP_COLOR;
             if (pathIdx === START_CELL) topColor = START_TOP_COLOR;
-            if (owned) topColor = PLAYER_COLORS[prop.owner].bg;
+            if (owned) {
+              const ownerIdx = typeof prop.owner === "number"
+                ? prop.owner
+                : players.findIndex((_, i) => i === prop.owner);
+              const safeIdx = Math.max(0, Math.min(ownerIdx, PLAYER_COLORS.length - 1));
+              topColor = PLAYER_COLORS[safeIdx]?.bg ?? DEFAULT_TOP_COLOR;
+            }
 
             const tokens = tokensByPath[pathIdx] || [];
 
@@ -204,13 +210,16 @@ export default function Board({ properties, players, displayPositions, diceRolli
             return tokens.map((playerIdx, stackIdx) => {
               const offsetX = (stackIdx % 2) * 22 - 11;
               const offsetY = Math.floor(stackIdx / 2) * 14 - 7;
+              const safeColorIdx = Math.max(0, Math.min(playerIdx, PLAYER_COLORS.length - 1));
+              const color = PLAYER_COLORS[safeColorIdx]?.bg ?? "#b9b2e8";
+              const emoji = players[playerIdx]?.emoji ?? "🐑";
               return (
                 <TokenPiece
                   key={`${pathIdx}-${playerIdx}`}
                   x={x + offsetX}
                   y={y + offsetY}
-                  color={PLAYER_COLORS[playerIdx].bg}
-                  emoji={players[playerIdx].emoji}
+                  color={color}
+                  emoji={emoji}
                 />
               );
             });
