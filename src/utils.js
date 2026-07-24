@@ -21,7 +21,6 @@ export function getBuildingEmoji(level) {
 }
 
 export function buildingIcons(level) {
-  // Returns an array of icon strings to render for a given building level.
   if (level <= 0) return [];
   if (level <= 3) return Array.from({ length: level }, () => "🏡");
   if (level <= 6) return Array.from({ length: level - 3 }, () => "🏢");

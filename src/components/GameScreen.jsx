@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Board from "./Board.jsx";
+import DiceFace from "./DiceFace.jsx";
 import BalancePanel from "./BalancePanel.jsx";
 import QuizModal from "./QuizModal.jsx";
 import ActionModal from "./ActionModal.jsx";
@@ -13,7 +14,6 @@ import { PLAYER_COLORS, TOTAL_PATH, DEFAULT_QUIZZES, GOLDEN_KEY_CARDS } from "..
 
 const MOVE_STEP_MS = 350;
 const ROLL_ANIMATION_MS = 500;
-const DICE_FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
 function rollDie() {
   return Math.floor(Math.random() * 6) + 1;
@@ -23,7 +23,7 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
   const [diceRolling, setDiceRolling] = useState(false);
   const [diceValues, setDiceValues] = useState(null); // [die1, die2]
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animatingPos, setAnimatingPos] = useState(null); // { playerIdx, pos }
+  const [animatingPos, setAnimatingPos] = useState(null);
   const [movingMessage, setMovingMessage] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
@@ -122,10 +122,10 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
 
             <div className="dice-area">
               <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
-                {diceRolling ? "🎲" : (diceValues ? DICE_FACES[diceValues[0] - 1] : "?")}
+                {diceRolling ? "🎲" : (diceValues ? <DiceFace value={diceValues[0]} /> : "?")}
               </div>
               <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
-                {diceRolling ? "🎲" : (diceValues ? DICE_FACES[diceValues[1] - 1] : "?")}
+                {diceRolling ? "🎲" : (diceValues ? <DiceFace value={diceValues[1]} /> : "?")}
               </div>
               <button className="roll-btn" disabled={rollDisabled} onClick={handleRoll}>
                 🎲 주사위 굴리기

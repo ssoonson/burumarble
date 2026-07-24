@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export default function IslandModal({ onResolve }) {
   const [rolling, setRolling] = useState(false);
-  const [result, setResult] = useState(null); // { die1, die2 }
+  const [result, setResult] = useState(null);
 
   function handleRoll() {
     if (rolling) return;

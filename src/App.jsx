@@ -15,8 +15,6 @@ export default function App() {
   const [game, dispatch] = useReducer(gameReducer, undefined, createInitialGameState);
   const [toastMsg, setToastMsg] = useState(null);
 
-  // On load: try to pull quiz data from the URL (?q=...), which works on any static host.
-  // Falls back to Claude's shared artifact storage if available (only inside Claude).
   useEffect(() => {
     let usedUrlQuiz = false;
     try {
@@ -42,11 +40,10 @@ export default function App() {
             if (Array.isArray(parsed) && parsed.length > 0) setCustomQuizzes(parsed);
           }
         })
-        .catch(() => { /* no shared quiz set yet */ });
+        .catch(() => {});
     }
   }, []);
 
-  // Surface toast messages emitted by the game engine.
   useEffect(() => {
     if (!game.toast) return;
     setToastMsg(game.toast);

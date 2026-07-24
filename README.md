@@ -33,15 +33,17 @@ src/
   constants.js       게임 데이터(칸 이름, 가격, 색상 등) — 순수 데이터
   utils.js           포맷팅/퀴즈 파싱/링크 인코딩 — 순수 함수
   gameEngine.js       게임 규칙(구매/업그레이드/통행료/파산/승리) — 순수 reducer
+  isoMath.js          아이소메트릭 보드 좌표 계산 — 순수 함수
   App.jsx             단계 전환 + 전체 상태 관리
   components/
     QuizUploadStep.jsx   1단계: 문제 업로드
     ShareStep.jsx        2단계: 링크 공유 + QR코드
     SetupStep.jsx        3단계: 인원수/캐릭터 선택
     GameScreen.jsx        4단계: 실제 게임 화면 (보드+주사위+모달 조립)
-    Board.jsx             게임판
+    Board.jsx             아이소메트릭 게임판 (SVG)
     BalancePanel.jsx       잔액 현황판
     QuizModal.jsx / ActionModal.jsx / BankruptModal.jsx / GameOverModal.jsx
+    IslandModal.jsx / SpaceTravelModal.jsx / SpaceOfferModal.jsx / GoldenKeyModal.jsx
 ```
 
 `gameEngine.js`는 화면과 완전히 분리된 순수 함수라서, 게임 규칙만 따로 테스트하거나 나중에 수정하기 쉬워요.

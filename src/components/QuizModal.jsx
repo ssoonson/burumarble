@@ -3,7 +3,7 @@ import { normalizeAnswer } from "../utils.js";
 
 export default function QuizModal({ quiz, onResolve }) {
   const [answer, setAnswer] = useState("");
-  const [result, setResult] = useState(null); // { text, kind: 'correct'|'wrong' }
+  const [result, setResult] = useState(null);
   const [locked, setLocked] = useState(false);
   const inputRef = useRef(null);
 

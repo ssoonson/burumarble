@@ -4,7 +4,7 @@ import { parseQuizRows, parseCsvText } from "../utils.js";
 import { DEFAULT_QUIZZES } from "../constants.js";
 
 export default function QuizUploadStep({ customQuizzes, onUpload, onNext }) {
-  const [status, setStatus] = useState(null); // { type: 'error'|'success', text }
+  const [status, setStatus] = useState(null);
 
   const registeredCount = customQuizzes.length > 0 ? customQuizzes.length : DEFAULT_QUIZZES.length;
   const badgeLabel = customQuizzes.length > 0

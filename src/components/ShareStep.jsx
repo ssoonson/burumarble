@@ -6,19 +6,16 @@ export default function ShareStep({ customQuizzes, onBack, onNext }) {
   const [linkValue, setLinkValue] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [message, setMessage] = useState("👆 링크를 붙여넣고 QR코드 만들기를 눌러주세요");
-  const [messageType, setMessageType] = useState("info");
 
   async function handleGenerate() {
     const raw = linkValue.trim();
     setQrDataUrl(null);
     if (!raw) {
       setMessage("👆 링크를 붙여넣고 QR코드 만들기를 눌러주세요");
-      setMessageType("info");
       return;
     }
     if (!/^https?:\/\//i.test(raw)) {
       setMessage("⚠️ http:// 또는 https://로 시작하는 링크를 입력해주세요.");
-      setMessageType("error");
       return;
     }
     let finalUrl;
@@ -26,12 +23,10 @@ export default function ShareStep({ customQuizzes, onBack, onNext }) {
       finalUrl = buildShareableUrl(raw, customQuizzes);
     } catch (err) {
       setMessage("⚠️ 링크 형식이 올바르지 않아요. 다시 확인해주세요.");
-      setMessageType("error");
       return;
     }
     if (finalUrl.length > 1800) {
       setMessage("⚠️ 문제 수가 너무 많아서 QR코드로 담기 어려워요. 문제 개수를 줄여주세요.");
-      setMessageType("error");
       return;
     }
     setLinkValue(finalUrl);
@@ -40,7 +35,6 @@ export default function ShareStep({ customQuizzes, onBack, onNext }) {
       setQrDataUrl(dataUrl);
     } catch (err) {
       setMessage("QR 코드를 만들지 못했어요. 링크를 다시 확인해주세요.");
-      setMessageType("error");
     }
   }
 
@@ -49,7 +43,7 @@ export default function ShareStep({ customQuizzes, onBack, onNext }) {
     try {
       await navigator.clipboard.writeText(linkValue);
     } catch (err) {
-      // clipboard API unavailable; ignore silently, user can still select+copy manually
+      // clipboard API unavailable; ignore silently
     }
   }
 

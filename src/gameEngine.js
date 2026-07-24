@@ -36,7 +36,6 @@ export function createInitialGameState() {
     players: [],
     properties: [],
     currentPlayer: 0,
-    // idle | quiz | action | island | space | spaceOffer | goldenkey | bankrupt | gameover
     turnPhase: "idle",
     turnMessage: "",
     pendingLanding: null,
@@ -58,8 +57,6 @@ function nextActivePlayer(players, from) {
   return from;
 }
 
-// Moves a player forward by `steps` cells, wrapping around the board and
-// awarding salary each time the player passes/lands on the start cell.
 function stepMove(players, playerIdx, steps) {
   const next = players.map((p) => ({ ...p }));
   const p = next[playerIdx];
@@ -89,8 +86,6 @@ function determineLanding(players, properties, playerIdx) {
   return { kind: "toll", pathIdx, owner: prop.owner };
 }
 
-// Advances the turn to the next player, skipping any players stuck on the
-// deserted island (skipTurns > 0), or ends the game if only one remains.
 function advanceTurn(state) {
   const active = activePlayerIndices(state.players);
   if (active.length <= 1) {
@@ -140,9 +135,6 @@ function applyToll(state, pathIdx, owner) {
   return advanceTurn(next);
 }
 
-// Given a player's new position (after any kind of movement), routes to the
-// correct next phase: instant resolution (start/toll/maxed), a quiz gate
-// (buy/upgrade), or a special-cell event (island/space/goldenkey).
 function resolveLanding(state, players, playerIdx, toast) {
   const landing = determineLanding(players, state.properties, playerIdx);
   const p = players[playerIdx];
@@ -159,7 +151,7 @@ function resolveLanding(state, players, playerIdx, toast) {
       return advanceTurn({ ...nextState, turnMessage: `${p.emoji} 랜드마크는 더 이상 업그레이드할 수 없어요! 🏰` });
     case "toll":
       return applyToll(nextState, landing.pathIdx, landing.owner);
-    default: // "buy" or "upgrade"
+    default:
       return { ...nextState, turnPhase: "quiz", pendingLanding: landing };
   }
 }
@@ -239,7 +231,6 @@ export function gameReducer(state, action) {
       return state;
     }
 
-    // 🏝️ 무인도: roll two dice; doubles = escape immediately, otherwise skip 2 turns.
     case "ISLAND_ROLL": {
       const playerIdx = state.currentPlayer;
       const players = state.players.map((p) => ({ ...p }));
@@ -251,8 +242,6 @@ export function gameReducer(state, action) {
       return advanceTurn({ ...state, players, toast: `${players[playerIdx].emoji} 탈출 실패! 무인도에서 2턴 쉬어요 😭` });
     }
 
-    // 🚀 우주여행: roll again and move that many extra steps; if the resulting
-    // cell is an unowned ordinary city, offer it for free.
     case "SPACE_ROLL": {
       const playerIdx = state.currentPlayer;
       const { players, salaryGained } = stepMove(state.players, playerIdx, action.steps);
@@ -287,7 +276,6 @@ export function gameReducer(state, action) {
       return advanceTurn({ ...state, turnMessage: `${p.emoji} 이번엔 그냥 넘어갔어요.` });
     }
 
-    // 🔑 황금열쇠: draw a card (chosen by the UI layer) and apply its effect.
     case "RESOLVE_GOLDEN_KEY": {
       const { effect } = action;
       const playerIdx = state.currentPlayer;

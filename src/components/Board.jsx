@@ -28,17 +28,13 @@ const CORNER_TOP_COLOR = "#ffe8c2";
 const START_TOP_COLOR = "#d6f5ff";
 const PAD = 24;
 
-// Isometric tiles must be painted back-to-front (by row+col "depth") so that
-// each tile's extruded side faces correctly overlap the tiles behind it.
-// Path order (0-23 around the board perimeter) does NOT match this depth
-// order, so we compute a dedicated paint order here.
 const PAINT_ORDER = Array.from({ length: 24 }, (_, pathIdx) => pathIdx).sort((a, b) => {
   const rcA = gridIndexToRowCol(PATH_GRID_INDICES[a]);
   const rcB = gridIndexToRowCol(PATH_GRID_INDICES[b]);
   return (rcA.row + rcA.col) - (rcB.row + rcB.col);
 });
 
-function TileFace({ pathIdx, x, y, topColor, isCorner }) {
+function TileFace({ x, y, topColor, isCorner }) {
   const hw = TILE_W / 2;
   const hh = TILE_H / 2;
   const top = diamondPoints(x, y);
@@ -101,7 +97,7 @@ export default function Board({ properties, players, displayPositions }) {
 
             return (
               <g key={pathIdx}>
-                <TileFace pathIdx={pathIdx} x={x} y={y} topColor={topColor} isCorner={isCorner} />
+                <TileFace x={x} y={y} topColor={topColor} isCorner={isCorner} />
                 <foreignObject x={x - hw} y={y - hh} width={TILE_W} height={TILE_H}>
                   <div xmlns="http://www.w3.org/1999/xhtml" className="iso-cell-content">
                     <span className="iso-cell-name">{CELL_NAMES[pathIdx]}</span>
@@ -158,12 +154,7 @@ export default function Board({ properties, players, displayPositions }) {
             );
           })}
 
-          <foreignObject
-            x={-140}
-            y={190}
-            width={280}
-            height={180}
-          >
+          <foreignObject x={-140} y={190} width={280} height={180}>
             <div xmlns="http://www.w3.org/1999/xhtml" className="iso-center-content">
               <span className="iso-center-dice">🎲</span>
               <span className="iso-center-title">부루마블</span>
