@@ -5,15 +5,24 @@ export const START_MONEY = 2000000;
 export const SALARY = 200000;
 export const MAX_BUILDING_LEVEL = 7;
 
-export const EMOJIS = ["🐶", "🐱", "🦊", "🐰", "🐻", "🐼"];
+export const EMOJIS = ["🐑", "🐰", "🦆", "🐟", "🐶", "🐻"];
+
+export const CHARACTER_IMAGES = {
+  "🐑": "/characters/sheep.png",
+  "🐰": "/characters/rabbit.png",
+  "🦆": "/characters/duck.png",
+  "🐟": "/characters/tuna.png",
+  "🐶": "/characters/dog.png",
+  "🐻": "/characters/bear.png",
+};
 
 export const PLAYER_COLORS = [
-  { bg: "#ffb3c6", dark: "#ff7eb3" },
-  { bg: "#a8d4ff", dark: "#5a9fd4" },
-  { bg: "#b3f0b3", dark: "#5cb85c" },
-  { bg: "#ffd9a8", dark: "#e8a040" },
-  { bg: "#d9b3ff", dark: "#9b59b6" },
-  { bg: "#b3fff0", dark: "#2fa88f" },
+  { bg: "#e8b8c4", dark: "#c98fa0" },
+  { bg: "#a8c4e8", dark: "#7fa0cc" },
+  { bg: "#a8d8c8", dark: "#7fb5a2" },
+  { bg: "#e8d0b0", dark: "#c9ab88" },
+  { bg: "#c9bce8", dark: "#a294cc" },
+  { bg: "#b8d8dd", dark: "#8fb3ba" },
 ];
 
 export const CELL_NAMES = [

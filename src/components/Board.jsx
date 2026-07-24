@@ -16,16 +16,19 @@ import {
   computeCenterDiamond,
   diamondPoints,
   pointsToString,
+  roundedPolygonPath,
   shadeColor,
   gridIndexToRowCol,
 } from "../isoMath.js";
 import { PATH_GRID_INDICES } from "../constants.js";
 import { formatMoneyShort, buildingIcons, buildingLabel } from "../utils.js";
+import DiceFace from "./DiceFace.jsx";
+import CharacterAvatar from "./CharacterAvatar.jsx";
 
 const CORNER_PATH_INDICES = new Set([0, 6, 12, 18]);
-const DEFAULT_TOP_COLOR = "#fffaf2";
-const CORNER_TOP_COLOR = "#ffe8c2";
-const START_TOP_COLOR = "#d6f5ff";
+const DEFAULT_TOP_COLOR = "#f2f3fa";
+const CORNER_TOP_COLOR = "#e8d0b0";
+const START_TOP_COLOR = "#a8c4e8";
 const PAD = 24;
 
 const PAINT_ORDER = Array.from({ length: 24 }, (_, pathIdx) => pathIdx).sort((a, b) => {
@@ -40,23 +43,32 @@ function TileFace({ x, y, topColor, isCorner }) {
   const top = diamondPoints(x, y);
   const leftFace = [[x - hw, y], [x, y + hh], [x, y + hh + EXTRUDE_DEPTH], [x - hw, y + EXTRUDE_DEPTH]];
   const rightFace = [[x + hw, y], [x, y + hh], [x, y + hh + EXTRUDE_DEPTH], [x + hw, y + EXTRUDE_DEPTH]];
-  const strokeColor = isCorner ? "#e8a040" : "#ffffff";
+  const strokeColor = isCorner ? "#d4b896" : "#e2e5f2";
+  const highlightId = `tileHighlight-${Math.round(x)}-${Math.round(y)}`;
 
   return (
     <g>
-      <polygon points={pointsToString(leftFace)} fill={shadeColor(topColor, -22)} />
-      <polygon points={pointsToString(rightFace)} fill={shadeColor(topColor, -10)} />
-      <polygon
-        points={pointsToString(top)}
+      <path d={roundedPolygonPath(leftFace, 7)} fill={shadeColor(topColor, -26)} />
+      <path d={roundedPolygonPath(rightFace, 7)} fill={shadeColor(topColor, -13)} />
+      <path
+        d={roundedPolygonPath(top, 14)}
         fill={topColor}
         stroke={strokeColor}
         strokeWidth={isCorner ? 3 : 2}
       />
+      {/* soft puffy highlight — brighter toward the upper-left, mimicking matte clay light */}
+      <defs>
+        <radialGradient id={highlightId} cx="32%" cy="28%" r="75%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <path d={roundedPolygonPath(top, 14)} fill={`url(#${highlightId})`} />
     </g>
   );
 }
 
-export default function Board({ properties, players, displayPositions }) {
+export default function Board({ properties, players, displayPositions, diceRolling, diceValues, flickerValues = [1, 1] }) {
   const bounds = computeBoardBounds();
   const vbWidth = bounds.width + PAD * 2;
   const vbHeight = bounds.height + PAD * 2;
@@ -134,15 +146,28 @@ export default function Board({ properties, players, displayPositions }) {
                     {tokens.length > 0 && (
                       <div className="iso-tokens">
                         {tokens.map((playerIdx, stackIdx) => {
-                          const offsetX = (stackIdx % 2) * 16 - 8;
-                          const offsetY = Math.floor(stackIdx / 2) * 16 - 8;
+                          const offsetX = (stackIdx % 2) * 24 - 12;
+                          const offsetY = Math.floor(stackIdx / 2) * 10 - 5;
                           return (
                             <span
                               key={playerIdx}
-                              className="iso-token"
-                              style={{ left: `calc(50% + ${offsetX}px)`, top: `calc(40% + ${offsetY}px)` }}
+                              className="iso-token-piece"
+                              style={{
+                                left: `calc(50% + ${offsetX}px)`,
+                                top: `calc(42% + ${offsetY}px)`,
+                              }}
                             >
-                              {players[playerIdx].emoji}
+                              <span
+                                className="iso-token-head"
+                                style={{ borderColor: PLAYER_COLORS[playerIdx].dark }}
+                              >
+                                <CharacterAvatar emoji={players[playerIdx].emoji} className="iso-token-emoji" />
+                              </span>
+                              <span
+                                className="iso-token-base"
+                                style={{ background: PLAYER_COLORS[playerIdx].dark }}
+                              />
+                              <span className="iso-token-shadow" />
                             </span>
                           );
                         })}
@@ -156,8 +181,22 @@ export default function Board({ properties, players, displayPositions }) {
 
           <foreignObject x={-140} y={190} width={280} height={180}>
             <div xmlns="http://www.w3.org/1999/xhtml" className="iso-center-content">
-              <span className="iso-center-dice">🎲</span>
-              <span className="iso-center-title">부루마블</span>
+              {diceRolling ? (
+                <div className="iso-center-dice-roll rolling">
+                  <div className="iso-center-die"><DiceFace value={flickerValues[0]} /></div>
+                  <div className="iso-center-die"><DiceFace value={flickerValues[1]} /></div>
+                </div>
+              ) : diceValues ? (
+                <div className="iso-center-dice-roll">
+                  <div className="iso-center-die"><DiceFace value={diceValues[0]} /></div>
+                  <div className="iso-center-die"><DiceFace value={diceValues[1]} /></div>
+                </div>
+              ) : (
+                <>
+                  <span className="iso-center-dice">🎲</span>
+                  <span className="iso-center-title">부루마블</span>
+                </>
+              )}
             </div>
           </foreignObject>
         </svg>

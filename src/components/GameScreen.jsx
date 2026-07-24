@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Board from "./Board.jsx";
 import DiceFace from "./DiceFace.jsx";
+import CharacterAvatar from "./CharacterAvatar.jsx";
 import BalancePanel from "./BalancePanel.jsx";
 import QuizModal from "./QuizModal.jsx";
 import ActionModal from "./ActionModal.jsx";
@@ -22,15 +23,20 @@ function rollDie() {
 export default function GameScreen({ game, dispatch, quizPool, registeredCount, usingCustom, onRestart }) {
   const [diceRolling, setDiceRolling] = useState(false);
   const [diceValues, setDiceValues] = useState(null); // [die1, die2]
+  const [flickerValues, setFlickerValues] = useState([1, 1]); // rapid random faces while rolling
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatingPos, setAnimatingPos] = useState(null);
   const [movingMessage, setMovingMessage] = useState(null);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
   const moveTimerRef = useRef(null);
+  const flickerTimerRef = useRef(null);
 
   useEffect(() => {
-    return () => { if (moveTimerRef.current) clearInterval(moveTimerRef.current); };
+    return () => {
+      if (moveTimerRef.current) clearInterval(moveTimerRef.current);
+      if (flickerTimerRef.current) clearInterval(flickerTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -54,7 +60,12 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
     const die2 = rollDie();
     setDiceRolling(true);
     setDiceValues(null);
+    flickerTimerRef.current = setInterval(() => {
+      setFlickerValues([rollDie(), rollDie()]);
+    }, 90);
     setTimeout(() => {
+      clearInterval(flickerTimerRef.current);
+      flickerTimerRef.current = null;
       setDiceRolling(false);
       setDiceValues([die1, die2]);
       animateMove(die1 + die2, die1, die2);
@@ -102,7 +113,14 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
         <BalancePanel players={game.players} currentPlayer={game.currentPlayer} />
 
         <div className="board-column">
-          <Board properties={game.properties} players={game.players} displayPositions={displayPositions} />
+          <Board
+            properties={game.properties}
+            players={game.players}
+            displayPositions={displayPositions}
+            diceRolling={diceRolling}
+            diceValues={diceValues}
+            flickerValues={flickerValues}
+          />
 
           <div className="controls">
             <div className="player-status">
@@ -112,7 +130,7 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
                   className={`player-badge${idx === game.currentPlayer ? " active" : ""}${p.bankrupt ? " bankrupt" : ""}`}
                   style={{ borderColor: idx === game.currentPlayer ? PLAYER_COLORS[idx].dark : undefined }}
                 >
-                  <span className="emoji">{p.emoji}</span>
+                  <CharacterAvatar emoji={p.emoji} className="emoji" />
                   <span>{idx + 1}번</span>
                 </div>
               ))}
@@ -122,10 +140,10 @@ export default function GameScreen({ game, dispatch, quizPool, registeredCount, 
 
             <div className="dice-area">
               <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
-                {diceRolling ? "🎲" : (diceValues ? <DiceFace value={diceValues[0]} /> : "?")}
+                {diceRolling ? <DiceFace value={flickerValues[0]} /> : (diceValues ? <DiceFace value={diceValues[0]} /> : "?")}
               </div>
               <div className={`dice-display${diceRolling ? " rolling" : ""}`}>
-                {diceRolling ? "🎲" : (diceValues ? <DiceFace value={diceValues[1]} /> : "?")}
+                {diceRolling ? <DiceFace value={flickerValues[1]} /> : (diceValues ? <DiceFace value={diceValues[1]} /> : "?")}
               </div>
               <button className="roll-btn" disabled={rollDisabled} onClick={handleRoll}>
                 🎲 주사위 굴리기

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EMOJIS } from "../constants.js";
+import CharacterAvatar from "./CharacterAvatar.jsx";
 
 export default function SetupStep({ playerCount, setPlayerCount, selectedEmojis, setSelectedEmojis, onBack, onStart }) {
   const [error, setError] = useState("");
@@ -62,7 +63,7 @@ export default function SetupStep({ playerCount, setPlayerCount, selectedEmojis,
                         disabled={isDisabled}
                         onClick={() => handleEmojiPick(playerIdx, emoji)}
                       >
-                        {emoji}
+                        <CharacterAvatar emoji={emoji} className="emoji-btn-avatar" />
                       </button>
                     );
                   })}
