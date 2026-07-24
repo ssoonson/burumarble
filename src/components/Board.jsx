@@ -6,6 +6,7 @@ import {
   PLAYER_COLORS,
   SPECIAL_INDICES,
   SPECIAL_CELL_ICONS,
+  CHARACTER_IMAGES,
 } from "../constants.js";
 import {
   TILE_W,
@@ -23,7 +24,6 @@ import {
 import { PATH_GRID_INDICES } from "../constants.js";
 import { formatMoneyShort, buildingIcons, buildingLabel } from "../utils.js";
 import DiceFace from "./DiceFace.jsx";
-import CharacterAvatar from "./CharacterAvatar.jsx";
 
 const CORNER_PATH_INDICES = new Set([0, 6, 12, 18]);
 const DEFAULT_TOP_COLOR = "#f2f3fa";
@@ -36,6 +36,54 @@ const PAINT_ORDER = Array.from({ length: 24 }, (_, pathIdx) => pathIdx).sort((a,
   const rcB = gridIndexToRowCol(PATH_GRID_INDICES[b]);
   return (rcA.row + rcA.col) - (rcB.row + rcB.col);
 });
+
+function TokenPiece({ x, y, color, emoji }) {
+  const dark = shadeColor(color, -30);
+  const light = shadeColor(color, 22);
+  const faceHref = CHARACTER_IMAGES[emoji];
+  const uid = `${Math.round(x)}-${Math.round(y)}-${emoji.codePointAt(0)}`;
+  const gradId = `pieceGrad-${uid}`;
+  const clipId = `faceClip-${uid}`;
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={light} />
+          <stop offset="100%" stopColor={dark} />
+        </linearGradient>
+        <clipPath id={clipId}>
+          <circle cx={x} cy={y - 22} r={7.5} />
+        </clipPath>
+      </defs>
+      {/* ground shadow */}
+      <ellipse cx={x} cy={y + 15} rx={15} ry={3.5} fill="rgba(70,60,90,0.28)" />
+      {/* two-tier base */}
+      <ellipse cx={x} cy={y + 11} rx={14} ry={4.5} fill={dark} />
+      <ellipse cx={x} cy={y + 8} rx={11} ry={3.5} fill={`url(#${gradId})`} />
+      {/* tapered body */}
+      <path
+        d={`M ${x - 10},${y + 9} C ${x - 10},${y} ${x - 6},${y - 8} ${x - 4},${y - 8} L ${x + 4},${y - 8} C ${x + 6},${y - 8} ${x + 10},${y} ${x + 10},${y + 9} Z`}
+        fill={`url(#${gradId})`}
+      />
+      {/* neck */}
+      <ellipse cx={x} cy={y - 8} rx={4.5} ry={2} fill={dark} />
+      {/* head */}
+      <circle cx={x} cy={y - 22} r={9} fill={`url(#${gradId})`} stroke="#ffffff" strokeWidth={1.5} />
+      {faceHref && (
+        <image
+          href={faceHref}
+          x={x - 7.5}
+          y={y - 29.5}
+          width={15}
+          height={15}
+          preserveAspectRatio="xMidYMid slice"
+          clipPath={`url(#${clipId})`}
+        />
+      )}
+    </g>
+  );
+}
 
 function TileFace({ x, y, topColor, isCorner }) {
   const hw = TILE_W / 2;
@@ -143,40 +191,29 @@ export default function Board({ properties, players, displayPositions, diceRolli
                         )}
                       </>
                     )}
-                    {tokens.length > 0 && (
-                      <div className="iso-tokens">
-                        {tokens.map((playerIdx, stackIdx) => {
-                          const offsetX = (stackIdx % 2) * 24 - 12;
-                          const offsetY = Math.floor(stackIdx / 2) * 10 - 5;
-                          return (
-                            <span
-                              key={playerIdx}
-                              className="iso-token-piece"
-                              style={{
-                                left: `calc(50% + ${offsetX}px)`,
-                                top: `calc(42% + ${offsetY}px)`,
-                              }}
-                            >
-                              <span
-                                className="iso-token-head"
-                                style={{ borderColor: PLAYER_COLORS[playerIdx].dark }}
-                              >
-                                <CharacterAvatar emoji={players[playerIdx].emoji} className="iso-token-emoji" />
-                              </span>
-                              <span
-                                className="iso-token-base"
-                                style={{ background: PLAYER_COLORS[playerIdx].dark }}
-                              />
-                              <span className="iso-token-shadow" />
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 </foreignObject>
               </g>
             );
+          })}
+
+          {/* Player pieces rendered as a final pass (pure SVG, always on top, immune to foreignObject clipping) */}
+          {PAINT_ORDER.map((pathIdx) => {
+            const { x, y } = isoPositionForPathIndex(pathIdx);
+            const tokens = tokensByPath[pathIdx] || [];
+            return tokens.map((playerIdx, stackIdx) => {
+              const offsetX = (stackIdx % 2) * 22 - 11;
+              const offsetY = Math.floor(stackIdx / 2) * 14 - 7;
+              return (
+                <TokenPiece
+                  key={`${pathIdx}-${playerIdx}`}
+                  x={x + offsetX}
+                  y={y + offsetY}
+                  color={PLAYER_COLORS[playerIdx].bg}
+                  emoji={players[playerIdx].emoji}
+                />
+              );
+            });
           })}
 
           <foreignObject x={-140} y={190} width={280} height={180}>

@@ -1,0 +1,91 @@
+rules_version = '2';
+
+// ============================================================================
+// 중요: 프론트엔드의 도메인/권한 검사는 사용자가 우회할 수 있습니다.
+// 실제 보안은 반드시 이 규칙 파일에서 강제됩니다.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 학교 도메인 — 실제 도메인으로 반드시 바꿔주세요.
+    function allowedDomain() {
+      return 'sen.go.kr';
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 로그인 + 학교 도메인 계정만 허용
+    function isSchoolUser() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@' + allowedDomain());
+    }
+
+    // 교사 여부는 /admins/{uid} 문서 존재로 판단
+    function isTeacher() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── 앱 설정: 누구나 읽기, 쓰기는 콘솔에서만 ──
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ── 관리자 목록: 읽기는 교사 본인 확인용, 쓰기는 콘솔에서만 ──
+    match /admins/{uid} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ── 문제 세트: 학교 계정은 읽기, 교사만 쓰기 ──
+    match /quizSets/{quizSetId} {
+      allow read: if isSchoolUser();
+      allow create, update, delete: if isTeacher();
+    }
+
+    // ── 방 ──
+    match /rooms/{roomId} {
+      allow read: if isSchoolUser();
+
+      // 방 생성/삭제는 교사만
+      allow create, delete: if isTeacher();
+
+      // 게임 진행 중 상태 갱신은 방에 참가한 학생도 가능
+      // (턴/주사위/땅 소유 동기화를 위해 필요)
+      allow update: if isTeacher()
+        || (isSchoolUser()
+            && exists(/databases/$(database)/documents/rooms/$(roomId)/players/$(request.auth.uid)));
+
+      // ── 방 안의 플레이어 ──
+      match /players/{playerUid} {
+        allow read: if isSchoolUser();
+
+        // 학생은 본인 문서만 생성(입장) 가능
+        allow create: if isTeacher()
+          || (isSchoolUser() && request.auth.uid == playerUid);
+
+        // 학생은 본인 문서만 수정 가능하되, money 필드는 직접 못 바꿈
+        // (게임머니 조정은 교사만 — 학생의 자기 잔액 조작 방지)
+        allow update: if isTeacher()
+          || (isSchoolUser()
+              && request.auth.uid == playerUid
+              && request.resource.data.money == resource.data.money);
+
+        allow delete: if isTeacher();
+      }
+
+      // ── 이벤트 로그: 참가자는 추가만, 수정/삭제 불가 ──
+      match /events/{eventId} {
+        allow read: if isSchoolUser();
+        allow create: if isSchoolUser();
+        allow update, delete: if false;
+      }
+    }
+  }
+}
